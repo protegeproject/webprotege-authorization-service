@@ -1,6 +1,10 @@
 package edu.stanford.protege.webprotege.authorization;
 
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import edu.stanford.protege.webprotege.model.ProjectId;
+
 import java.util.Optional;
 
 /**
@@ -8,6 +12,7 @@ import java.util.Optional;
  * Stanford Center for Biomedical Informatics Research
  * 5 Jan 2017
  */
+@JsonTypeName("Application")
 public final class ApplicationResource implements Resource {
 
     private static final ApplicationResource INSTANCE = new ApplicationResource();
@@ -16,6 +21,7 @@ public final class ApplicationResource implements Resource {
 
     }
 
+    @JsonCreator
     public static ApplicationResource get() {
         return INSTANCE;
     }

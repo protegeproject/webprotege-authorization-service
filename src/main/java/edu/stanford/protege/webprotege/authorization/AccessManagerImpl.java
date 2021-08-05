@@ -1,5 +1,6 @@
 package edu.stanford.protege.webprotege.authorization;
 
+import edu.stanford.protege.webprotege.model.ProjectId;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;

@@ -1,0 +1,37 @@
+server:
+  port: 8083
+
+webprotege:
+  database:
+    name: webprotege
+
+spring.data.mongodb.auto-index-creation: true
+
+spring:
+  application:
+    name: AuthorizationService
+  kafka:
+    consumer:
+#      value-deserializer: org.springframework.kafka.support.serializer.ToFromStringSerde
+      properties:
+        spring:
+          json:
+            spring:
+              json:
+                trusted:
+                  packages: "*"
+            add:
+              type:
+                headers: false
+#    producer:
+#      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+#spring:
+#  kafka:
+#    producer:
+#      value-serializer=org:
+#        springframework:
+#          kafka:
+#            support:
+#              serializer:
+#                StringOrBytesSerializer:

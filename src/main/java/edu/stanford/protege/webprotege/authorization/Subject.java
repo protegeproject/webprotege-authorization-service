@@ -1,6 +1,8 @@
 package edu.stanford.protege.webprotege.authorization;
 
 
+import edu.stanford.protege.webprotege.model.UserId;
+
 import javax.annotation.Nonnull;
 import java.util.Objects;
 import java.util.Optional;

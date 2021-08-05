@@ -1,6 +1,7 @@
 
 package edu.stanford.protege.webprotege.authorization;
 
+import edu.stanford.protege.webprotege.model.ProjectId;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,7 +12,6 @@ import java.util.Optional;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
 
 public class ProjectResource_TestCase {
 
@@ -54,7 +54,7 @@ public class ProjectResource_TestCase {
 
     @Test
     public void shouldNotBeEqualToOtherThatHasDifferent_projectId() {
-        assertThat(projectResource, is(Matchers.not(new ProjectResource(new ProjectId("33333333-3333-3333-3333-333333333333")))));
+        assertThat(projectResource, is(Matchers.not(new ProjectResource(ProjectId.generate()))));
     }
 
     @Test

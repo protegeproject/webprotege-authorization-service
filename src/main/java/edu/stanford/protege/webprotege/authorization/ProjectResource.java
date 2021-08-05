@@ -1,5 +1,9 @@
 package edu.stanford.protege.webprotege.authorization;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import edu.stanford.protege.webprotege.model.ProjectId;
+
 import java.util.Objects;
 import java.util.Optional;
 
@@ -8,10 +12,12 @@ import java.util.Optional;
  * Stanford Center for Biomedical Informatics Research
  * 5 Jan 2017
  */
+@JsonTypeName("Project")
 public final class ProjectResource implements Resource {
 
     private final ProjectId projectId;
 
+    @JsonCreator
     public ProjectResource(ProjectId projectId) {
         this.projectId = Objects.requireNonNull(projectId);
     }
