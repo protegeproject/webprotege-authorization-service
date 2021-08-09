@@ -1,6 +1,7 @@
 package edu.stanford.protege.webprotege.authorization;
 
-import edu.stanford.protege.webprotege.model.ProjectId;
+import edu.stanford.protege.webprotege.authorization.api.*;
+import edu.stanford.protege.webprotege.common.ProjectId;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -155,8 +156,8 @@ public class AccessManagerImpl implements AccessManager {
     }
 
     @Override
-    public Collection<Subject> getSubjectsWithAccessToResource(Resource resource, BuiltInAction action) {
-        return getSubjectsWithAccessToResource(resource, Optional.of(action.getActionId()));
+    public Collection<Subject> getSubjectsWithAccessToResource(Resource resource, ActionId actionId) {
+        return getSubjectsWithAccessToResource(resource, Optional.of(actionId));
     }
 
     private Collection<Subject> getSubjectsWithAccessToResource(Resource resource, Optional<ActionId> action) {
