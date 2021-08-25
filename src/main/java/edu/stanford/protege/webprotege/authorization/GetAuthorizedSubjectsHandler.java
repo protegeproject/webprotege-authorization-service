@@ -1,8 +1,7 @@
 package edu.stanford.protege.webprotege.authorization;
 
-import edu.stanford.protege.webprotege.authorization.api.GetAuthorizedSubjectsRequest;
-import edu.stanford.protege.webprotege.authorization.api.GetAuthorizedSubjectsResponse;
 import edu.stanford.protege.webprotege.ipc.CommandHandler;
+import edu.stanford.protege.webprotege.ipc.ExecutionContext;
 import edu.stanford.protege.webprotege.ipc.WebProtegeHandler;
 import reactor.core.publisher.Mono;
 
@@ -26,7 +25,7 @@ public class GetAuthorizedSubjectsHandler implements CommandHandler<GetAuthorize
     @Nonnull
     @Override
     public String getChannelName() {
-        return GetAuthorizedSubjectsRequest.CHANNEL_NAME;
+        return GetAuthorizedSubjectsRequest.CHANNEL;
     }
 
     @Override
@@ -35,7 +34,7 @@ public class GetAuthorizedSubjectsHandler implements CommandHandler<GetAuthorize
     }
 
     @Override
-    public Mono<GetAuthorizedSubjectsResponse> handleRequest(GetAuthorizedSubjectsRequest request) {
+    public Mono<GetAuthorizedSubjectsResponse> handleRequest(GetAuthorizedSubjectsRequest request, ExecutionContext executionContext) {
         var subjects = accessManager.getSubjectsWithAccessToResource(request.resource(),
                                                       request.actionId());
 

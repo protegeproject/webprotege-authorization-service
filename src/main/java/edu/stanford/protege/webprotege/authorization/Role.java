@@ -1,8 +1,5 @@
 package edu.stanford.protege.webprotege.authorization;
 
-import edu.stanford.protege.webprotege.authorization.api.ActionId;
-import edu.stanford.protege.webprotege.authorization.api.RoleId;
-
 import java.util.List;
 
 /**

@@ -1,11 +1,6 @@
 package edu.stanford.protege.webprotege.authorization;
 
 
-import edu.stanford.protege.webprotege.authorization.api.ActionId;
-import edu.stanford.protege.webprotege.authorization.api.Resource;
-import edu.stanford.protege.webprotege.authorization.api.RoleId;
-import edu.stanford.protege.webprotege.authorization.api.Subject;
-
 import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Set;

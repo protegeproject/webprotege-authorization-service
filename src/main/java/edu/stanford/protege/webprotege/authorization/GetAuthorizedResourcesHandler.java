@@ -1,8 +1,7 @@
 package edu.stanford.protege.webprotege.authorization;
 
-import edu.stanford.protege.webprotege.authorization.api.GetAuthorizedResourcesRequest;
-import edu.stanford.protege.webprotege.authorization.api.GetAuthorizedResourcesResponse;
 import edu.stanford.protege.webprotege.ipc.CommandHandler;
+import edu.stanford.protege.webprotege.ipc.ExecutionContext;
 import edu.stanford.protege.webprotege.ipc.WebProtegeHandler;
 import reactor.core.publisher.Mono;
 
@@ -26,7 +25,7 @@ public class GetAuthorizedResourcesHandler implements CommandHandler<GetAuthoriz
     @Nonnull
     @Override
     public String getChannelName() {
-        return GetAuthorizedResourcesRequest.CHANNEL_NAME;
+        return GetAuthorizedResourcesRequest.CHANNEL;
     }
 
     @Override
@@ -35,7 +34,7 @@ public class GetAuthorizedResourcesHandler implements CommandHandler<GetAuthoriz
     }
 
     @Override
-    public Mono<GetAuthorizedResourcesResponse> handleRequest(GetAuthorizedResourcesRequest request) {
+    public Mono<GetAuthorizedResourcesResponse> handleRequest(GetAuthorizedResourcesRequest request, ExecutionContext executionContext) {
         var resources = accessManager.getResourcesAccessibleToSubject(request.subject(),
                                                       request.actionId());
 

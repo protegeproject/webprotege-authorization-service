@@ -1,17 +1,11 @@
 package edu.stanford.protege.webprotege.authorization;
 
-import edu.stanford.protege.webprotege.authorization.api.GetAssignedRolesRequest;
-import edu.stanford.protege.webprotege.authorization.api.GetAssignedRolesResponse;
-import edu.stanford.protege.webprotege.authorization.api.Resource;
-import edu.stanford.protege.webprotege.authorization.api.Subject;
 import edu.stanford.protege.webprotege.ipc.CommandHandler;
+import edu.stanford.protege.webprotege.ipc.ExecutionContext;
 import edu.stanford.protege.webprotege.ipc.WebProtegeHandler;
-import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Nonnull;
-
-import java.util.HashSet;
 import java.util.Set;
 
 import static java.util.Objects.requireNonNull;
@@ -33,7 +27,7 @@ public class GetAssignedRolesHandler implements CommandHandler<GetAssignedRolesR
     @Nonnull
     @Override
     public String getChannelName() {
-        return GetAssignedRolesRequest.CHANNEL_NAME;
+        return GetAssignedRolesRequest.CHANNEL;
     }
 
     @Override
@@ -42,7 +36,7 @@ public class GetAssignedRolesHandler implements CommandHandler<GetAssignedRolesR
     }
 
     @Override
-    public Mono<GetAssignedRolesResponse> handleRequest(GetAssignedRolesRequest request) {
+    public Mono<GetAssignedRolesResponse> handleRequest(GetAssignedRolesRequest request, ExecutionContext executionContext) {
         var subject = request.subject();
         var resource = request.resource();
         var assignedRoles = accessManager.getAssignedRoles(subject, resource);

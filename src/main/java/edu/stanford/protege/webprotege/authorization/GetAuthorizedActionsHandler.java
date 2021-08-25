@@ -1,8 +1,7 @@
 package edu.stanford.protege.webprotege.authorization;
 
-import edu.stanford.protege.webprotege.authorization.api.GetAuthorizedActionsRequest;
-import edu.stanford.protege.webprotege.authorization.api.GetAuthorizedActionsResponse;
 import edu.stanford.protege.webprotege.ipc.CommandHandler;
+import edu.stanford.protege.webprotege.ipc.ExecutionContext;
 import edu.stanford.protege.webprotege.ipc.WebProtegeHandler;
 import reactor.core.publisher.Mono;
 
@@ -25,7 +24,7 @@ public class GetAuthorizedActionsHandler implements CommandHandler<GetAuthorized
     @Nonnull
     @Override
     public String getChannelName() {
-        return GetAuthorizedActionsRequest.CHANNEL_NAME;
+        return GetAuthorizedActionsRequest.CHANNEL;
     }
 
     @Override
@@ -34,7 +33,7 @@ public class GetAuthorizedActionsHandler implements CommandHandler<GetAuthorized
     }
 
     @Override
-    public Mono<GetAuthorizedActionsResponse> handleRequest(GetAuthorizedActionsRequest request) {
+    public Mono<GetAuthorizedActionsResponse> handleRequest(GetAuthorizedActionsRequest request, ExecutionContext executionContext) {
         var actionClosure = accessManager.getActionClosure(request.subject(),
                                        request.resource());
         return Mono.just(new GetAuthorizedActionsResponse(request.resource(),

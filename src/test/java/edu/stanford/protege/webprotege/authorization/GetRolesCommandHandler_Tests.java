@@ -1,14 +1,11 @@
 package edu.stanford.protege.webprotege.authorization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import edu.stanford.protege.webprotege.authorization.api.GetRolesRequest;
-import edu.stanford.protege.webprotege.authorization.api.GetRolesResponse;
-import edu.stanford.protege.webprotege.authorization.api.ProjectResource;
-import edu.stanford.protege.webprotege.authorization.api.Subject;
 import edu.stanford.protege.webprotege.common.ProjectId;
 import edu.stanford.protege.webprotege.common.UserId;
 import edu.stanford.protege.webprotege.common.WebProtegeCommonConfiguration;
 import edu.stanford.protege.webprotege.ipc.CommandExecutor;
+import edu.stanford.protege.webprotege.ipc.ExecutionContext;
 import edu.stanford.protege.webprotege.ipc.WebProtegeIpcApplication;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,7 +56,8 @@ public class GetRolesCommandHandler_Tests {
         var subject = Subject.forUser(UserId.valueOf("Fred Smith"));
         var resource = new ProjectResource(ProjectId.generate());
         var request = new GetRolesRequest(subject, resource);
-        var responseFuture = commandExecutor.execute(request);
+        var executionContext = new ExecutionContext();
+        var responseFuture = commandExecutor.execute(request, new ExecutionContext());
         var response = responseFuture.get();
         assertThat(response.subject()).isEqualTo(subject);
         assertThat(response.resource()).isEqualTo(resource);

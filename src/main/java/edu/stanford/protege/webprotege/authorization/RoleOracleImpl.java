@@ -1,9 +1,5 @@
 package edu.stanford.protege.webprotege.authorization;
 
-import edu.stanford.protege.webprotege.authorization.api.ActionId;
-import edu.stanford.protege.webprotege.authorization.api.RoleId;
-import org.springframework.stereotype.Component;
-
 import javax.annotation.Nonnull;
 import java.util.*;
 

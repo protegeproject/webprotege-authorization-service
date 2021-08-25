@@ -1,10 +1,7 @@
 package edu.stanford.protege.webprotege.authorization;
 
-import edu.stanford.protege.webprotege.authorization.api.AuthorizationStatus;
-import edu.stanford.protege.webprotege.authorization.api.GetAssignedRolesResponse;
-import edu.stanford.protege.webprotege.authorization.api.GetAuthorizationStatusRequest;
-import edu.stanford.protege.webprotege.authorization.api.GetAuthorizationStatusResponse;
 import edu.stanford.protege.webprotege.ipc.CommandHandler;
+import edu.stanford.protege.webprotege.ipc.ExecutionContext;
 import edu.stanford.protege.webprotege.ipc.WebProtegeHandler;
 import reactor.core.publisher.Mono;
 
@@ -27,7 +24,7 @@ public class GetAuthorizationStatusHandler implements CommandHandler<GetAuthoriz
     @Nonnull
     @Override
     public String getChannelName() {
-        return GetAuthorizationStatusRequest.CHANNEL_NAME;
+        return GetAuthorizationStatusRequest.CHANNEL;
     }
 
     @Override
@@ -36,7 +33,7 @@ public class GetAuthorizationStatusHandler implements CommandHandler<GetAuthoriz
     }
 
     @Override
-    public Mono<GetAuthorizationStatusResponse> handleRequest(GetAuthorizationStatusRequest request) {
+    public Mono<GetAuthorizationStatusResponse> handleRequest(GetAuthorizationStatusRequest request, ExecutionContext executionContext) {
         var hasPermission = accessManager.hasPermission(request.subject(),
                                     request.resource(),
                                     request.actionId());

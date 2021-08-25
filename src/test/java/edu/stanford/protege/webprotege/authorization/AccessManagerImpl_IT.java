@@ -1,19 +1,14 @@
 package edu.stanford.protege.webprotege.authorization;
 
 import com.mongodb.client.MongoCollection;
-import edu.stanford.protege.webprotege.authorization.api.ApplicationResource;
-import edu.stanford.protege.webprotege.authorization.api.RoleId;
-import edu.stanford.protege.webprotege.authorization.api.Subject;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Collections;
 import java.util.List;
@@ -22,8 +17,6 @@ import java.util.Set;
 import static java.util.Collections.emptyList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.hamcrest.Matchers.hasItems;
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @DirtiesContext

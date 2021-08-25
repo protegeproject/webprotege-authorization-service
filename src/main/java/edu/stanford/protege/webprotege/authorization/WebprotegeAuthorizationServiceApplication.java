@@ -1,12 +1,13 @@
 package edu.stanford.protege.webprotege.authorization;
 
+import edu.stanford.protege.webprotege.ipc.WebProtegeIpcApplication;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.kafka.annotation.EnableKafka;
+import org.springframework.context.annotation.Import;
 
 @SpringBootApplication
-@EnableKafka
+@Import(WebProtegeIpcApplication.class)
 public class WebprotegeAuthorizationServiceApplication {
 
 	public static void main(String[] args) {

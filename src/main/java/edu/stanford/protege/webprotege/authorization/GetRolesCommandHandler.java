@@ -1,10 +1,8 @@
 package edu.stanford.protege.webprotege.authorization;
 
-import edu.stanford.protege.webprotege.authorization.api.GetRolesRequest;
-import edu.stanford.protege.webprotege.authorization.api.GetRolesResponse;
 import edu.stanford.protege.webprotege.ipc.CommandHandler;
+import edu.stanford.protege.webprotege.ipc.ExecutionContext;
 import edu.stanford.protege.webprotege.ipc.WebProtegeHandler;
-import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Nonnull;
@@ -27,7 +25,7 @@ public class GetRolesCommandHandler implements CommandHandler<GetRolesRequest, G
     @Nonnull
     @Override
     public String getChannelName() {
-        return GetRolesRequest.CHANNEL_NAME;
+        return GetRolesRequest.CHANNEL;
     }
 
     @Override
@@ -36,7 +34,7 @@ public class GetRolesCommandHandler implements CommandHandler<GetRolesRequest, G
     }
 
     @Override
-    public Mono<GetRolesResponse> handleRequest(GetRolesRequest request) {
+    public Mono<GetRolesResponse> handleRequest(GetRolesRequest request, ExecutionContext executionContext) {
         var roleClosure = accessManager.getRoleClosure(
                 request.subject(),
                 request.resource());
