@@ -1,17 +1,21 @@
 package edu.stanford.protege.webprotege.authorization;
 
 import edu.stanford.protege.webprotege.ipc.WebProtegeIpcApplication;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 
+import java.util.List;
+
 @SpringBootApplication
 @Import(WebProtegeIpcApplication.class)
-public class WebprotegeAuthorizationServiceApplication {
+public class WebProtegeAuthorizationServiceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(WebprotegeAuthorizationServiceApplication.class, args);
+		SpringApplication.run(WebProtegeAuthorizationServiceApplication.class, args);
 	}
 
 	@Bean
@@ -23,5 +27,4 @@ public class WebprotegeAuthorizationServiceApplication {
 	GetUserRolesErrorHandler getUserRolesErrorHandler() {
 		return new GetUserRolesErrorHandler();
 	}
-
 }
