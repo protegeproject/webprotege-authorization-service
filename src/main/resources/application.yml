@@ -1,12 +1,6 @@
 server:
   port: 7771
 
-webprotege:
-  database:
-    name: webprotege
-
-spring.data.mongodb.auto-index-creation: true
-
 spring:
   application:
     name: AuthorizationService
@@ -14,17 +8,9 @@ spring:
     consumer:
       auto-offset-reset: earliest
       group-id: ${spring.application.name}
-
-
-#    producer:
-#      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-
-#spring:
-#  kafka:
-#    producer:
-#      value-serializer=org:
-#        springframework:
-#          kafka:
-#            support:
-#              serializer:
-#                StringOrBytesSerializer:
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: webprotege
+      auto-index-creation: true
