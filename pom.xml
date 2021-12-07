@@ -14,7 +14,7 @@
 	<name>webprotege-authorization-service</name>
 	<description>A service that checks users are authorized to execute operations in WebProtége</description>
 	<properties>
-		<java.version>16</java.version>
+		<java.version>17</java.version>
 		<spring-cloud.version>2020.0.3</spring-cloud.version>
 	</properties>
 
@@ -88,6 +88,11 @@
 		<dependency>
 			<groupId>org.springframework.kafka</groupId>
 			<artifactId>spring-kafka-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>de.flapdoodle.embed</groupId>
+			<artifactId>de.flapdoodle.embed.mongo</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
