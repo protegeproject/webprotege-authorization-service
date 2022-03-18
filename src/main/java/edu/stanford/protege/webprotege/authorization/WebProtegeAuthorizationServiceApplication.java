@@ -12,7 +12,7 @@ import java.util.Arrays;
 
 @SpringBootApplication
 @Import(WebProtegeIpcApplication.class)
-public class WebProtegeAuthorizationServiceApplication {
+public class WebProtegeAuthorizationServiceApplication implements CommandLineRunner {
 
 	@Autowired
 	AccessManager accessManager;
@@ -29,5 +29,15 @@ public class WebProtegeAuthorizationServiceApplication {
 	@Bean
 	GetUserRolesErrorHandler getUserRolesErrorHandler() {
 		return new GetUserRolesErrorHandler();
+	}
+
+	@Override
+	public void run(String... args) throws Exception {
+		accessManager.setAssignedRoles(Subject.forAnySignedInUser(),
+									   ApplicationResource.get(),
+									   Arrays.asList(
+									   		BuiltInRole.PROJECT_CREATOR.getRoleId(),
+											BuiltInRole.PROJECT_UPLOADER.getRoleId()
+									   ));
 	}
 }

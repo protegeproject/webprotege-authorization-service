@@ -7,6 +7,7 @@ import edu.stanford.protege.webprotege.common.WebProtegeCommonConfiguration;
 import edu.stanford.protege.webprotege.ipc.CommandExecutor;
 import edu.stanford.protege.webprotege.ipc.ExecutionContext;
 import edu.stanford.protege.webprotege.ipc.WebProtegeIpcApplication;
+import edu.stanford.protege.webprotege.ipc.pulsar.PulsarCommandExecutor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +35,7 @@ public class GetRolesCommandHandler_Tests {
 
         @Bean
         CommandExecutor<GetRolesRequest, GetRolesResponse> executor() {
-            return new CommandExecutor<>(GetRolesResponse.class);
+            return new PulsarCommandExecutor<>(GetRolesResponse.class);
         }
     }
 
