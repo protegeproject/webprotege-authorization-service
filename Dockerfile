@@ -3,5 +3,5 @@ MAINTAINER protege.stanford.edu
 
 EXPOSE 7771
 
-COPY target/*.jar webprotege-authorization-service.jar
+COPY target/${JAR_FILE} webprotege-authorization-service.jar
 ENTRYPOINT ["java","-jar","/webprotege-authorization-service.jar"]
