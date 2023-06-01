@@ -52,6 +52,7 @@ class AccessManagerImpl_IT {
 
         @BeforeEach
         public void setUp() throws Exception {
+            getCollection().drop();
             subject = Subject.forUser(THE_USER_NAME);
             resource = ApplicationResource.get();
             assignedRoles = Collections.singleton(BuiltInRole.CAN_COMMENT.getRoleId());
