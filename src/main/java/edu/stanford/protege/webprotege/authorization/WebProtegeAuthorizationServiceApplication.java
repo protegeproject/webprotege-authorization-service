@@ -26,11 +26,6 @@ public class WebProtegeAuthorizationServiceApplication implements CommandLineRun
 		return RoleOracleImpl.get();
 	}
 
-	@Bean
-	GetUserRolesErrorHandler getUserRolesErrorHandler() {
-		return new GetUserRolesErrorHandler();
-	}
-
 	@Override
 	public void run(String... args) throws Exception {
 		accessManager.setAssignedRoles(Subject.forAnySignedInUser(),
