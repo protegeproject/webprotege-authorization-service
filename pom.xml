@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>edu.stanford.protege</groupId>
 	<artifactId>webprotege-authorization-service</artifactId>
-	<version>0.1.2</version>
+	<version>0.1.3</version>
 	<name>webprotege-authorization-service</name>
 	<description>A service that checks users are authorized to execute operations in WebProtége</description>
 	<properties>
@@ -129,6 +129,8 @@
 					<buildArgs>
 						<JAR_FILE>${project.build.finalName}.jar</JAR_FILE>
 					</buildArgs>
+					<username>${env.DOCKER_HUB_USER_NAME}</username>
+					<password>${env.DOCKER_HUB_TOKEN}</password>
 				</configuration>
 			</plugin>
 		</plugins>
