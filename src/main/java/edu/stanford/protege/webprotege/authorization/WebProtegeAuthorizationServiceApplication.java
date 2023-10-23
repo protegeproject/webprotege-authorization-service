@@ -14,9 +14,6 @@ import java.util.Arrays;
 @Import(WebProtegeIpcApplication.class)
 public class WebProtegeAuthorizationServiceApplication implements CommandLineRunner {
 
-	@Autowired
-	AccessManager accessManager;
-
 	public static void main(String[] args) {
 		SpringApplication.run(WebProtegeAuthorizationServiceApplication.class, args);
 	}
@@ -27,12 +24,6 @@ public class WebProtegeAuthorizationServiceApplication implements CommandLineRun
 	}
 
 	@Override
-	public void run(String... args) throws Exception {
-		accessManager.setAssignedRoles(Subject.forAnySignedInUser(),
-									   ApplicationResource.get(),
-									   Arrays.asList(
-									   		BuiltInRole.PROJECT_CREATOR.getRoleId(),
-											BuiltInRole.PROJECT_UPLOADER.getRoleId()
-									   ));
+	public void run(String... args) {
 	}
 }
