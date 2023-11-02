@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>edu.stanford.protege</groupId>
 	<artifactId>webprotege-authorization-service</artifactId>
-	<version>0.2.1-SNAPSHOT</version>
+	<version>0.2.1</version>
 	<name>webprotege-authorization-service</name>
 	<description>A service that checks users are authorized to execute operations in WebProtége</description>
 	<properties>
@@ -19,6 +19,10 @@
 	</properties>
 
 	<distributionManagement>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
 		<snapshotRepository>
 			<id>nexus-snapshots</id>
 			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
