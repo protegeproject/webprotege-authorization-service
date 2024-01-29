@@ -14,3 +14,5 @@ spring:
       port: 27017
       database: webprotege
       auto-index-creation: true
+
+keycloak-issuer-url: http://webprotege-local.edu/auth/realms/webprotege/protocol/openid-connect/certs
