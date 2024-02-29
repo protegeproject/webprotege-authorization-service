@@ -45,7 +45,6 @@ public class RoleOracleImpl implements RoleOracle {
         return roleIds.stream()
                 .flatMap(id -> getRoleClosure(id).stream())
                 .flatMap(r -> r.actions().stream())
-                .sorted()
                 .collect(toList());
     }
 
