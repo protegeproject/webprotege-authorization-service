@@ -1,9 +1,16 @@
 server:
   port: 7771
-
+logging:
+  level:
+    root: DEBUG
 spring:
   application:
     name: AuthorizationService
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: guest
+    password: guest
   kafka:
     consumer:
       auto-offset-reset: earliest
