@@ -22,4 +22,8 @@ spring:
       database: webprotege
       auto-index-creation: true
 
+webprotege.rabbitmq:
+  requestqueue: webprotege-authorization-queue
+  responsequeue: webprotege-authorization-response-queue
+
 keycloak-issuer-url: http://webprotege-local.edu/auth/realms/webprotege/protocol/openid-connect/certs
