@@ -6,7 +6,6 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.MongoDBContainer;
-import org.testcontainers.containers.PulsarContainer;
 import org.testcontainers.utility.DockerImageName;
 
 /**
@@ -16,7 +15,7 @@ import org.testcontainers.utility.DockerImageName;
  */
 public class MongoTestExtension implements BeforeAllCallback, AfterAllCallback {
 
-    private static Logger logger = LoggerFactory.getLogger(PulsarTestExtension.class);
+    private static Logger logger = LoggerFactory.getLogger(MongoTestExtension.class);
 
     private MongoDBContainer mongoDBContainer;
 

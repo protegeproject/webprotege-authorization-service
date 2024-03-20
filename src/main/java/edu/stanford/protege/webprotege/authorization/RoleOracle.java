@@ -15,5 +15,7 @@ public interface RoleOracle {
     @Nonnull
     Collection<Role> getRoleClosure(@Nonnull RoleId roleId);
 
+    Collection<ActionId> getActionsAssociatedToRoles(Collection<RoleId> roleIds);
+
 }
 

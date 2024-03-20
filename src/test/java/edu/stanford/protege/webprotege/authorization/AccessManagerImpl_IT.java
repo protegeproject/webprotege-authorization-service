@@ -8,120 +8,128 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 
+import java.security.PublicKey;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static java.util.Collections.emptyList;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 @SpringBootTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-@ExtendWith({PulsarTestExtension.class, MongoTestExtension.class})
+@ExtendWith({MongoTestExtension.class, RabbitTestExtension.class})
 class AccessManagerImpl_IT {
 
-        private static final String THE_USER_NAME = "The User";
+    private static final String THE_USER_NAME = "The User";
 
-        private static final String USER_NAME_FIELD = "userName";
+    private static final String USER_NAME_FIELD = "userName";
 
-        private static final String ASSIGNED_ROLES_FIELD = "assignedRoles";
+    private static final String ASSIGNED_ROLES_FIELD = "assignedRoles";
 
-        private static final String ROLE_CLOSURE_FIELD = "roleClosure";
+    private static final String ROLE_CLOSURE_FIELD = "roleClosure";
 
-        private static final String ACTION_CLOSURE_FIELD = "actionClosure";
+    private static final String ACTION_CLOSURE_FIELD = "actionClosure";
 
-        @Autowired
-        private AccessManagerImpl manager;
+    @MockBean
+    public Map<String, PublicKey> setUpPublicKey;
 
-        @Autowired
-        private MongoTemplate mongoTemplate;
+    @Autowired
+    private AccessManagerImpl manager;
 
-        private Subject subject;
+    @Autowired
+    private MongoTemplate mongoTemplate;
 
-        private ApplicationResource resource;
+    private Subject subject;
 
-        private Set<RoleId> assignedRoles;
+    private ApplicationResource resource;
 
-        private Document storedDocument;
+    private Set<RoleId> assignedRoles;
 
-        private Document userQuery;
+    private Document storedDocument;
 
-        @BeforeEach
-        public void setUp() throws Exception {
-            getCollection().drop();
-            subject = Subject.forUser(THE_USER_NAME);
-            resource = ApplicationResource.get();
-            assignedRoles = Collections.singleton(BuiltInRole.CAN_COMMENT.getRoleId());
-            userQuery = new Document(USER_NAME_FIELD, THE_USER_NAME);
-            manager.setAssignedRoles(
-                    subject,
-                    resource,
-                    assignedRoles
-            );
-            storedDocument = getCollection().find(userQuery).first();
-        }
+    private Document userQuery;
 
-        @Test
-        public void shouldStoreAssignedRoles() {
-            assertThat(storedDocument, is(notNullValue()));
-            assertThat((List<String>) storedDocument.get(ASSIGNED_ROLES_FIELD), hasItems("CanComment"));
-        }
+    @BeforeEach
+    public void setUp() throws Exception {
+        getCollection().drop();
+        subject = Subject.forUser(THE_USER_NAME);
+        resource = ApplicationResource.get();
+        assignedRoles = Collections.singleton(BuiltInRole.CAN_COMMENT.getRoleId());
+        userQuery = new Document(USER_NAME_FIELD, THE_USER_NAME);
+        manager.setAssignedRoles(
+                subject,
+                resource,
+                assignedRoles
+        );
+        storedDocument = getCollection().find(userQuery).first();
+    }
 
-        @Test
-        public void shouldStoreRoleClosure() {
-            assertThat(storedDocument, is(notNullValue()));
-            // Just check it contains a parent role
-            assertThat((List<String>) storedDocument.get(ROLE_CLOSURE_FIELD), hasItems("CanView"));
-        }
+    @Test
+    public void shouldStoreAssignedRoles() {
+        assertThat(storedDocument, is(notNullValue()));
+        assertThat((List<String>) storedDocument.get(ASSIGNED_ROLES_FIELD), hasItems("CanComment"));
+    }
 
-        @Test
-        public void shouldStoreActionClosure() {
-            assertThat(storedDocument, is(notNullValue()));
-            assertThat((List<String>) storedDocument.get(ACTION_CLOSURE_FIELD), hasItems("ViewProject"));
-        }
+    @Test
+    public void shouldStoreRoleClosure() {
+        assertThat(storedDocument, is(notNullValue()));
+        // Just check it contains a parent role
+        assertThat((List<String>) storedDocument.get(ROLE_CLOSURE_FIELD), hasItems("CanView"));
+    }
 
-        @Test
-        public void shouldNotStoreDuplicate() {
-            manager.setAssignedRoles(
-                    subject,
-                    resource,
-                    assignedRoles
-            );
-            assertThat(countDocuments(), is(1L));
-        }
+    @Test
+    public void shouldStoreActionClosure() {
+        assertThat(storedDocument, is(notNullValue()));
+        assertThat((List<String>) storedDocument.get(ACTION_CLOSURE_FIELD), hasItems("ViewProject"));
+    }
 
-        private long countDocuments() {
-            return getCollection().countDocuments();
-        }
+    @Test
+    public void shouldNotStoreDuplicate() {
+        manager.setAssignedRoles(
+                subject,
+                resource,
+                assignedRoles
+        );
+        assertThat(countDocuments(), is(1L));
+    }
 
-        private MongoCollection<Document> getCollection() {
-            return mongoTemplate.getCollection("RoleAssignments");
-        }
+    private long countDocuments() {
+        return getCollection().countDocuments();
+    }
 
-        @Test
-        public void shouldRebuildRoleClosure() {
-            getCollection().updateOne(userQuery, new Document("$set", new Document("roleClosure", emptyList())));
-            getCollection().updateOne(userQuery, new Document("$set", new Document("actionClosure", emptyList())));
-            manager.rebuild();
-            Document rebuiltDocument = getCollection().find().first();
-            assertThat((List<String>) rebuiltDocument.get(ROLE_CLOSURE_FIELD), hasItems("CanView"));
-        }
+    private MongoCollection<Document> getCollection() {
+        return mongoTemplate.getCollection("RoleAssignments");
+    }
 
-        @Test
-        public void shouldRebuildActionClosure() {
-            getCollection().updateOne(userQuery, new Document("$set", new Document("roleClosure", emptyList())));
-            getCollection().updateOne(userQuery, new Document("$set", new Document("actionClosure", emptyList())));
-            manager.rebuild();
-            Document rebuiltDocument = getCollection().find().first();
-            assertThat((List<String>) rebuiltDocument.get(ACTION_CLOSURE_FIELD), hasItems("ViewProject"));
-        }
+    @Test
+    public void shouldRebuildRoleClosure() {
+        getCollection().updateOne(userQuery, new Document("$set", new Document("roleClosure", emptyList())));
+        getCollection().updateOne(userQuery, new Document("$set", new Document("actionClosure", emptyList())));
+        manager.rebuild();
+        Document rebuiltDocument = getCollection().find().first();
+        assertThat((List<String>) rebuiltDocument.get(ROLE_CLOSURE_FIELD), hasItems("CanView"));
+    }
 
-        @AfterEach
-        public void tearDown() {
-            getCollection().drop();
-        }
+    @Test
+    public void shouldRebuildActionClosure() {
+        getCollection().updateOne(userQuery, new Document("$set", new Document("roleClosure", emptyList())));
+        getCollection().updateOne(userQuery, new Document("$set", new Document("actionClosure", emptyList())));
+        manager.rebuild();
+        Document rebuiltDocument = getCollection().find().first();
+        assertThat((List<String>) rebuiltDocument.get(ACTION_CLOSURE_FIELD), hasItems("ViewProject"));
+    }
+
+    @AfterEach
+    public void tearDown() {
+        getCollection().drop();
+    }
 }
