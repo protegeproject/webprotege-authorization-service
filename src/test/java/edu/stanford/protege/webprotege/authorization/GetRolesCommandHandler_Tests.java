@@ -11,6 +11,7 @@ import edu.stanford.protege.webprotege.ipc.impl.CommandExecutorImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.keycloak.common.VerificationException;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -33,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SpringBootTest
 @Import({WebProtegeCommonConfiguration.class, WebProtegeIpcApplication.class})
+@ExtendWith(MongoTestExtension.class)
 public class GetRolesCommandHandler_Tests extends IntegrationTestsExtension {
 
 
