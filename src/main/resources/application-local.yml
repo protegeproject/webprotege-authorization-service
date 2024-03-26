@@ -15,14 +15,6 @@ spring:
       database: webprotege
       auto-index-creation: true
 
-webprotege:
-  pulsar:
-    serviceHttpUrl: http://localhost:8080
-    serviceUrl: pulsar://localhost:6650
-    tenant: webprotege
-    command-replies:
-      subscriptionExpiraryTimeMinutes: 5
-
 logging:
   level:
     root: DEBUG
