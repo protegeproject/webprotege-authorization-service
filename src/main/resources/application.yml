@@ -23,6 +23,7 @@ spring:
       auto-index-creation: true
 
 webprotege.rabbitmq:
+  timeout: 60000
   requestqueue: webprotege-authorization-queue
   responsequeue: webprotege-authorization-response-queue
 

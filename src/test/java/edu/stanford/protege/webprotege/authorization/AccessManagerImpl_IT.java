@@ -1,13 +1,19 @@
 package edu.stanford.protege.webprotege.authorization;
 
 import com.mongodb.client.MongoCollection;
+import edu.stanford.protege.webprotege.ipc.WebProtegeIpcApplication;
+import edu.stanford.protege.webprotege.ipc.impl.RabbitMqConfiguration;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.*;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 
@@ -20,11 +26,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.mockito.Mockito.mock;
 
 @SpringBootTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-@ExtendWith(MongoTestExtension.class)
-class AccessManagerImpl_IT extends IntegrationTestsExtension{
+@ExtendWith({MongoTestExtension.class, RabbitMqTestExtension.class, KeycloakTestExtension.class})
+class AccessManagerImpl_IT {
 
     private static final String THE_USER_NAME = "The User";
 
