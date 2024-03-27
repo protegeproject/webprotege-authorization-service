@@ -4,10 +4,6 @@ server:
 spring:
   application:
     name: AuthorizationService
-  kafka:
-    consumer:
-      auto-offset-reset: earliest
-      group-id: ${spring.application.name}
   data:
     mongodb:
       host: localhost
