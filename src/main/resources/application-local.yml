@@ -1,9 +1,16 @@
 server:
   port: 7771
-
+logging:
+  level:
+    root: DEBUG
 spring:
   application:
     name: AuthorizationService
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
   kafka:
     consumer:
       auto-offset-reset: earliest
@@ -15,14 +22,8 @@ spring:
       database: webprotege
       auto-index-creation: true
 
-webprotege:
-  pulsar:
-    serviceHttpUrl: http://localhost:8080
-    serviceUrl: pulsar://localhost:6650
-    tenant: webprotege
-    command-replies:
-      subscriptionExpiraryTimeMinutes: 5
+webprotege.rabbitmq:
+  requestqueue: webprotege-authorization-queue
+  responsequeue: webprotege-authorization-response-queue
 
-logging:
-  level:
-    root: DEBUG
+keycloak-issuer-url: http://webprotege-local.edu/auth/realms/webprotege/protocol/openid-connect/certs
