@@ -12,7 +12,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.keycloak.common.VerificationException;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,8 +19,6 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 
-import java.io.IOException;
-import java.security.cert.CertificateException;
 import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,30 +26,30 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Matthew Horridge
  * Stanford Center for Biomedical Informatics Research
- * 2021-07-29
+ * 2024-03-27
  */
 @SpringBootTest
-@Import({WebProtegeCommonConfiguration.class, WebProtegeIpcApplication.class, MockJwtDecoderConfiguration.class})
+@Import({WebProtegeCommonConfiguration.class, WebProtegeIpcApplication.class})
 @ExtendWith({KeycloakTestExtension.class, MongoTestExtension.class, RabbitMqTestExtension.class})
-public class GetRolesCommandHandler_Tests {
+public class GetAssignedRolesHandler_Tests {
 
     @TestConfiguration
     static class Config {
 
         @Bean
-        CommandExecutor<GetRolesRequest, GetRolesResponse> executor() {
-            return new CommandExecutorImpl<>(GetRolesResponse.class);
+        CommandExecutor<GetAssignedRolesRequest, GetAssignedRolesResponse> executor() {
+            return new CommandExecutorImpl<>(GetAssignedRolesResponse.class);
         }
     }
 
     @Autowired
-    GetRolesCommandHandler handler;
+    GetAssignedRolesHandler handler;
 
     @Autowired
     ObjectMapper objectMapper;
 
     @Autowired
-    CommandExecutor<GetRolesRequest, GetRolesResponse> commandExecutor;
+    CommandExecutor<GetAssignedRolesRequest, GetAssignedRolesResponse> commandExecutor;
 
     @BeforeEach
     void setUp() {
@@ -68,10 +65,11 @@ public class GetRolesCommandHandler_Tests {
     void shouldExecuteCommand() throws InterruptedException, ExecutionException {
         var subject = Subject.forUser(UserId.valueOf("Fred Smith"));
         var resource = new ProjectResource(ProjectId.generate());
-        var request = new GetRolesRequest(subject, resource);
+        var request = new GetAssignedRolesRequest(subject, resource);
         var responseFuture = commandExecutor.execute(request, new ExecutionContext());
         var response = responseFuture.get();
         assertThat(response.subject()).isEqualTo(subject);
         assertThat(response.resource()).isEqualTo(resource);
     }
+
 }
