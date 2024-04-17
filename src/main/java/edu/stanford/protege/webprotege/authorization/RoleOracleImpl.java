@@ -40,6 +40,15 @@ public class RoleOracleImpl implements RoleOracle {
         return result;
     }
 
+    @Override
+    public Collection<ActionId> getActionsAssociatedToRoles(Collection<RoleId> roleIds) {
+        return roleIds.stream()
+                .flatMap(id -> getRoleClosure(id).stream())
+                .flatMap(r -> r.actions().stream())
+                .sorted(Comparator.comparing(ActionId::id))
+                .collect(toList());
+    }
+
     private void add(RoleId roleId, Set<Role> result) {
         Role role = closure.get(roleId);
         if(role == null) {

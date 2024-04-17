@@ -5,7 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-@ExtendWith({MongoTestExtension.class, PulsarTestExtension.class})
+@ExtendWith({MongoTestExtension.class, RabbitMqTestExtension.class, KeycloakTestExtension.class})
 class WebProtegeAuthorizationServiceApplicationTests {
 
 	@Test
