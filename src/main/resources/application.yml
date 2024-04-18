@@ -9,10 +9,6 @@ spring:
     port: 5672
     username: guest
     password: guest
-  kafka:
-    consumer:
-      auto-offset-reset: earliest
-      group-id: ${spring.application.name}
   data:
     mongodb:
       host: localhost

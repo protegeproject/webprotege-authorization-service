@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>edu.stanford.protege</groupId>
 	<artifactId>webprotege-authorization-service</artifactId>
-	<version>0.2.3-SNAPSHOT</version>
+	<version>1.0.1</version>
 	<name>webprotege-authorization-service</name>
 	<description>A service that checks users are authorized to execute operations in WebProtége</description>
 	<properties>
@@ -49,7 +49,7 @@
 		<dependency>
 			<groupId>edu.stanford.protege</groupId>
 			<artifactId>webprotege-ipc</artifactId>
-			<version>0.10.3-SNAPSHOT</version>
+			<version>1.0.0</version>
 		</dependency>
 
 		<dependency>
@@ -93,14 +93,28 @@
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>testcontainers</artifactId>
-			<version>1.18.1</version>
+			<version>1.19.7</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>mongodb</artifactId>
-			<version>1.18.1</version>
+			<version>1.19.7</version>
+			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.github.dasniko</groupId>
+			<artifactId>testcontainers-keycloak</artifactId>
+			<version>3.3.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.keycloak</groupId>
+			<artifactId>keycloak-admin-client</artifactId>
+			<version>22.0.0</version>
+			<scope>test</scope>
+		</dependency>
+
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>rabbitmq</artifactId>
@@ -111,6 +125,10 @@
 			<groupId>org.testcontainers</groupId>
 			<artifactId>junit-jupiter</artifactId>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
 		</dependency>
 
 	</dependencies>
@@ -242,6 +260,12 @@
 
 				</plugins>
 			</build>
+		</profile>
+		<profile>
+			<id>local</id>
+			<properties>
+				<spring.profiles.active>local</spring.profiles.active>
+			</properties>
 		</profile>
 	</profiles>
 
