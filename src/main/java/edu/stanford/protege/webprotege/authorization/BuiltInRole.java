@@ -86,6 +86,16 @@ public enum BuiltInRole {
                    DELETE_DATATYPE,
                    REVERT_CHANGES),
 
+    REGULAR_PROJECT_EDITOR(OBJECT_COMMENTER,
+                   EDIT_ONTOLOGY,
+                   EDIT_ONTOLOGY_ANNOTATIONS,
+                   CREATE_CLASS,
+                   MERGE_ENTITIES,
+                   CREATE_PROPERTY,
+                   CREATE_INDIVIDUAL,
+                   CREATE_DATATYPE,
+                   REVERT_CHANGES),
+
     LAYOUT_EDITOR(ADD_OR_REMOVE_PERSPECTIVE,
                   ADD_OR_REMOVE_VIEW),
 

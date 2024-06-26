@@ -46,7 +46,30 @@ public class GetAuthorizedActionsHandler implements CommandHandler<GetAuthorized
     @Override
     public Mono<GetAuthorizedActionsResponse> handleRequest(GetAuthorizedActionsRequest request, ExecutionContext executionContext) {
 
-        if(request.resource().isApplication()) {
+        /*
+        ToDo: Understand why we need this if else here
+         */
+//        if(request.resource().isApplication()) {
+//            try {
+//                List<RoleId> roleIds = tokenValidator.getTokenClaims(executionContext.jwt()).stream()
+//                        .map(RoleId::new)
+//                        .toList();
+//                Set<ActionId> actions  = new HashSet<>(roleOracle.getActionsAssociatedToRoles(roleIds));
+//                return Mono.just(new GetAuthorizedActionsResponse(request.resource(),
+//                        request.subject(),
+//                        actions));
+//
+//            } catch (VerificationException e) {
+//                throw new RuntimeException(e);
+//            }
+//        }else {
+//            var actionClosure = accessManager.getActionClosure(request.subject(),
+//                    request.resource());
+//            return Mono.just(new GetAuthorizedActionsResponse(request.resource(),
+//                    request.subject(),
+//                    actionClosure));
+//        }
+
             try {
                 List<RoleId> roleIds = tokenValidator.getTokenClaims(executionContext.jwt()).stream()
                         .map(RoleId::new)
@@ -59,12 +82,5 @@ public class GetAuthorizedActionsHandler implements CommandHandler<GetAuthorized
             } catch (VerificationException e) {
                 throw new RuntimeException(e);
             }
-        }else {
-            var actionClosure = accessManager.getActionClosure(request.subject(),
-                    request.resource());
-            return Mono.just(new GetAuthorizedActionsResponse(request.resource(),
-                    request.subject(),
-                    actionClosure));
-        }
     }
 }
