@@ -164,17 +164,17 @@ public class AccessManagerImpl implements AccessManager {
         Query query = query(where(PROJECT_ID).is(projectId));
         action.ifPresent(a -> query.addCriteria(where(ACTION_CLOSURE).in(a.toString())));
         return mongoTemplate.find(query, RoleAssignment.class)
-                            .stream()
-                            .map(ra -> {
-                        Optional<String> userName = ra.getUserName();
-                        if (userName.isPresent()) {
-                            return Subject.forUser(userName.get());
-                        }
-                        else {
-                            return Subject.forAnySignedInUser();
-                        }
-                    })
-                            .collect(toList());
+                .stream()
+                .map(ra -> {
+                    Optional<String> userName = ra.getUserName();
+                    if (userName.isPresent()) {
+                        return Subject.forUser(userName.get());
+                    }
+                    else {
+                        return Subject.forAnySignedInUser();
+                    }
+                })
+                .collect(toList());
     }
 
     @Override
