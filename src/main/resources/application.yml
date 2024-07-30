@@ -1,8 +1,6 @@
 server:
   port: 7771
-logging:
-  level:
-    root: DEBUG
+
 spring:
   application:
     name: AuthorizationService
@@ -19,8 +17,8 @@ spring:
       auto-index-creation: true
 
 webprotege.rabbitmq:
-  timeout: 60000
   requestqueue: webprotege-authorization-queue
   responsequeue: webprotege-authorization-response-queue
+  timeout: 60000
 
 keycloak-issuer-url: http://webprotege-local.edu/auth/realms/webprotege/protocol/openid-connect/certs
