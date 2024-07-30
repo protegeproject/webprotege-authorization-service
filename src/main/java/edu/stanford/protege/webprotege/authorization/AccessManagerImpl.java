@@ -162,7 +162,7 @@ public class AccessManagerImpl implements AccessManager {
     private Collection<Subject> getSubjectsWithAccessToResource(Resource resource, Optional<ActionId> action) {
         String projectId = toProjectId(resource);
         Query query = query(where(PROJECT_ID).is(projectId));
-        action.ifPresent(a -> query.addCriteria(where(ACTION_CLOSURE).in(a.toString())));
+        action.ifPresent(a -> query.addCriteria(where(ACTION_CLOSURE).in(a.id())));
         return mongoTemplate.find(query, RoleAssignment.class)
                 .stream()
                 .map(ra -> {
