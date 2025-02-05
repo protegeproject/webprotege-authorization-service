@@ -46,6 +46,9 @@ public class GetAuthorizedActionsHandler implements CommandHandler<GetAuthorized
     @Override
     public Mono<GetAuthorizedActionsResponse> handleRequest(GetAuthorizedActionsRequest request, ExecutionContext executionContext) {
 
+        /*
+        ToDo: Understand why we need this if else here
+         */
         if(request.resource().isApplication()) {
             try {
                 List<RoleId> roleIds = tokenValidator.getTokenClaims(executionContext.jwt()).stream()
