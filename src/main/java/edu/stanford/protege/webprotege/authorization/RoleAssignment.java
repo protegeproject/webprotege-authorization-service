@@ -1,6 +1,9 @@
 package edu.stanford.protege.webprotege.authorization;
 
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableList;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
@@ -30,7 +33,7 @@ public class RoleAssignment {
 
     public static final String PROJECT_ID = "projectId";
 
-    public static final String ACTION_CLOSURE = "actionClosure";
+    public static final String ACTION_CLOSURE = "capabilityClosure";
 
     public static final String ROLE_CLOSURE = "roleClosure";
 
@@ -48,7 +51,7 @@ public class RoleAssignment {
 
     private List<String> roleClosure = List.of();
 
-    private List<String> actionClosure = List.of();
+    private List<Capability> capabilityClosure = List.of();
 
 
     private RoleAssignment() {
@@ -58,13 +61,45 @@ public class RoleAssignment {
                           @Nullable String projectId,
                           @Nonnull List<String> assignedRoles,
                           @Nonnull List<String> roleClosure,
-                          @Nonnull List<String> actionClosure) {
+                          @Nonnull List<Capability> capability) {
         this.userName = userName;
         this.projectId = projectId;
         this.assignedRoles = List.copyOf(Objects.requireNonNull(assignedRoles));
         this.roleClosure = List.copyOf(Objects.requireNonNull(roleClosure));
-        this.actionClosure = List.copyOf(Objects.requireNonNull(actionClosure));
+        this.capabilityClosure = List.copyOf(Objects.requireNonNull(capability));
     }
+
+
+    /**
+     * Creates a role assignment from JSON serialization.  This JSON creator supports legacy serialization of
+     * an actionClosure field that is just an array of strings.  These strings are simply translated as
+     * BasicCapability objects.
+     */
+    @JsonCreator
+    public static RoleAssignment fromJson(@Nullable @JsonProperty("userName") String userName,
+                                          @Nullable @JsonProperty("projectId") String projectId,
+                                          @Nonnull @JsonProperty("assignedRoles") List<String> assignedRoles,
+                                          @Nonnull @JsonProperty("roleClosure") List<String> roleClosure,
+                                          @Nullable @JsonProperty("actionClosure") List<String> actionClosure,
+                                          @Nullable @JsonProperty("capabilityClosure") List<Capability> capabilityClosure) {
+        if(actionClosure != null) {
+            return new RoleAssignment(userName,
+                    projectId,
+                    assignedRoles,
+                    roleClosure,
+                    actionClosure.stream().map(a -> (Capability) BasicCapability.valueOf(a)).toList());
+        }
+        else {
+            return new RoleAssignment(
+                    userName,
+                    projectId,
+                    assignedRoles,
+                    roleClosure,
+                    java.util.Objects.requireNonNullElse(capabilityClosure, ImmutableList.of())
+            );
+        }
+    }
+
 
     @Nonnull
     public Optional<String> getProjectId() {
@@ -87,13 +122,13 @@ public class RoleAssignment {
     }
 
     @Nonnull
-    public List<String> getActionClosure() {
-        return List.copyOf(actionClosure);
+    public List<Capability> getCapabilityClosure() {
+        return List.copyOf(capabilityClosure);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(userName, projectId, assignedRoles, roleClosure, actionClosure);
+        return Objects.hash(userName, projectId, assignedRoles, roleClosure, capabilityClosure);
     }
 
     @Override
@@ -108,11 +143,11 @@ public class RoleAssignment {
                 && Objects.equals(projectId, other.projectId)
                 && this.assignedRoles.equals(other.assignedRoles)
                 && this.roleClosure.equals(other.roleClosure)
-                && this.actionClosure.equals(other.actionClosure);
+                && this.capabilityClosure.equals(other.capabilityClosure);
     }
 
     @Override
     public String toString() {
-        return "RoleAssignment{" + "id=" + id + ", userName='" + userName + '\'' + ", projectId='" + projectId + '\'' + ", assignedRoles=" + assignedRoles + ", roleClosure=" + roleClosure + ", actionClosure=" + actionClosure + '}';
+        return "RoleAssignment{" + "id=" + id + ", userName='" + userName + '\'' + ", projectId='" + projectId + '\'' + ", assignedRoles=" + assignedRoles + ", roleClosure=" + roleClosure + ", capabilityClosure=" + capabilityClosure + '}';
     }
 }

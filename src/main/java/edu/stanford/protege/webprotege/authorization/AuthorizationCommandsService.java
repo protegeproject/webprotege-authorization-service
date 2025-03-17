@@ -1,9 +1,9 @@
 package edu.stanford.protege.webprotege.authorization;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.stanford.protege.webprotege.ipc.ExecutionContext;
 import org.keycloak.common.VerificationException;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
 import java.util.HashSet;
 import java.util.List;
@@ -11,6 +11,7 @@ import java.util.Set;
 
 @Service
 public class AuthorizationCommandsService {
+
     private final AccessManager accessManager;
 
     private final TokenValidator tokenValidator;
@@ -31,8 +32,8 @@ public class AuthorizationCommandsService {
                 roleIds = tokenValidator.getTokenClaims(executionContext.jwt()).stream()
                         .map(RoleId::new)
                         .toList();
-                Set<ActionId> actions  = new HashSet<>(roleOracle.getActionsAssociatedToRoles(roleIds));
-                hasPermission = actions.contains(request.actionId());
+                Set<Capability> capabilities  = new HashSet<>(roleOracle.getCapabilitiesAssociatedToRoles(roleIds));
+                hasPermission = capabilities.contains(request.capability());
 
             } catch (VerificationException e) {
                 throw new RuntimeException(e);
@@ -41,7 +42,7 @@ public class AuthorizationCommandsService {
         }else {
             hasPermission = accessManager.hasPermission(request.subject(),
                     request.resource(),
-                    request.actionId());
+                    request.capability());
         }
         if(hasPermission) {
             return new GetAuthorizationStatusResponse(request.resource(),

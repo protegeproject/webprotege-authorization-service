@@ -1,6 +1,7 @@
 package edu.stanford.protege.webprotege.authorization;
 
 import javax.annotation.Nonnull;
+import java.security.DrbgParameters;
 import java.util.*;
 
 import static java.util.stream.Collectors.toList;
@@ -24,10 +25,8 @@ public class RoleOracleImpl implements RoleOracle {
             List<RoleId> parentRoles = builtInRole.getParents().stream()
                                                   .map(BuiltInRole::getRoleId)
                                                   .collect(toList());
-            List<ActionId> actions = builtInRole.getActions().stream()
-                                                .map(BuiltInAction::getActionId)
-                                                .collect(toList());
-            impl.addRole(new Role(builtInRole.getRoleId(), parentRoles, actions));
+            List<Capability> capabilities = new ArrayList<>(builtInRole.getCapabilities());
+            impl.addRole(new Role(builtInRole.getRoleId(), parentRoles, capabilities));
         }
         return impl;
     }
@@ -41,11 +40,10 @@ public class RoleOracleImpl implements RoleOracle {
     }
 
     @Override
-    public Collection<ActionId> getActionsAssociatedToRoles(Collection<RoleId> roleIds) {
+    public Collection<Capability> getCapabilitiesAssociatedToRoles(Collection<RoleId> roleIds) {
         return roleIds.stream()
                 .flatMap(id -> getRoleClosure(id).stream())
-                .flatMap(r -> r.actions().stream())
-                .sorted(Comparator.comparing(ActionId::id))
+                .flatMap(r -> r.capabilities().stream())
                 .collect(toList());
     }
 

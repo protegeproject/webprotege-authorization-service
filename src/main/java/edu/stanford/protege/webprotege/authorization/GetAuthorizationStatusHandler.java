@@ -54,17 +54,18 @@ public class GetAuthorizationStatusHandler implements CommandHandler<GetAuthoriz
                 roleIds = tokenValidator.getTokenClaims(executionContext.jwt()).stream()
                         .map(RoleId::new)
                         .toList();
-                Set<ActionId> actions  = new HashSet<>(roleOracle.getActionsAssociatedToRoles(roleIds));
-                hasPermission = actions.contains(request.actionId());
+                Set<Capability> capabilities  = new HashSet<>(roleOracle.getCapabilitiesAssociatedToRoles(roleIds));
+                hasPermission = capabilities.contains(request.capability());
 
             } catch (VerificationException e) {
+                logger.error("Error getting token claims", e);
                 throw new RuntimeException(e);
             }
 
         }else {
             hasPermission = accessManager.hasPermission(request.subject(),
                     request.resource(),
-                    request.actionId());
+                    request.capability());
         }
         if(hasPermission) {
             return Mono.just(new GetAuthorizationStatusResponse(request.resource(),

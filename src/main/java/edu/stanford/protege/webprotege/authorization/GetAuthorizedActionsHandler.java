@@ -18,7 +18,7 @@ import java.util.Set;
  * 2021-08-09
  */
 @WebProtegeHandler
-public class GetAuthorizedActionsHandler implements CommandHandler<GetAuthorizedActionsRequest, GetAuthorizedActionsResponse> {
+public class GetAuthorizedActionsHandler implements CommandHandler<GetAuthorizedCapabilitiesRequest, GetAuthorizedCapabilitiesResponse> {
     private final static Logger logger = LoggerFactory.getLogger(GetAuthorizedActionsHandler.class);
 
     private final AccessManager accessManager;
@@ -35,36 +35,37 @@ public class GetAuthorizedActionsHandler implements CommandHandler<GetAuthorized
     @Nonnull
     @Override
     public String getChannelName() {
-        return GetAuthorizedActionsRequest.CHANNEL;
+        return GetAuthorizedCapabilitiesRequest.CHANNEL;
     }
 
     @Override
-    public Class<GetAuthorizedActionsRequest> getRequestClass() {
-        return GetAuthorizedActionsRequest.class;
+    public Class<GetAuthorizedCapabilitiesRequest> getRequestClass() {
+        return GetAuthorizedCapabilitiesRequest.class;
     }
 
     @Override
-    public Mono<GetAuthorizedActionsResponse> handleRequest(GetAuthorizedActionsRequest request, ExecutionContext executionContext) {
+    public Mono<GetAuthorizedCapabilitiesResponse> handleRequest(GetAuthorizedCapabilitiesRequest request, ExecutionContext executionContext) {
 
         if(request.resource().isApplication()) {
             try {
                 List<RoleId> roleIds = tokenValidator.getTokenClaims(executionContext.jwt()).stream()
                         .map(RoleId::new)
                         .toList();
-                Set<ActionId> actions  = new HashSet<>(roleOracle.getActionsAssociatedToRoles(roleIds));
-                return Mono.just(new GetAuthorizedActionsResponse(request.resource(),
+                Set<Capability> capabilities  = new HashSet<>(roleOracle.getCapabilitiesAssociatedToRoles(roleIds));
+                return Mono.just(new GetAuthorizedCapabilitiesResponse(request.resource(),
                         request.subject(),
-                        actions));
+                        capabilities));
 
             } catch (VerificationException e) {
                 throw new RuntimeException(e);
             }
         }else {
-            var actionClosure = accessManager.getActionClosure(request.subject(),
+            var capabilityClosure = accessManager.getCapabilityClosure(request.subject(),
                     request.resource());
-            return Mono.just(new GetAuthorizedActionsResponse(request.resource(),
+            logger.info("Retrieved capabilities for {}.  Capabilities: {}", request.subject(), capabilityClosure);
+            return Mono.just(new GetAuthorizedCapabilitiesResponse(request.resource(),
                     request.subject(),
-                    actionClosure));
+                    capabilityClosure));
         }
     }
 }

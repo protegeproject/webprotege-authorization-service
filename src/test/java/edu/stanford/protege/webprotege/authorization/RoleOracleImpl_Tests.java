@@ -3,7 +3,6 @@ package edu.stanford.protege.webprotege.authorization;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collection;
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,7 +30,7 @@ public class RoleOracleImpl_Tests {
 
     @Test
     void shouldGetActionsAssignedToRoles() {
-        var actions = roleOracle.getActionsAssociatedToRoles(Collections.singleton(BuiltInRole.PROJECT_CREATOR.getRoleId()));
-        assertThat(actions.contains(BuiltInAction.CREATE_EMPTY_PROJECT.getActionId()));
+        var actions = roleOracle.getCapabilitiesAssociatedToRoles(Collections.singleton(BuiltInRole.PROJECT_CREATOR.getRoleId()));
+        assertThat(actions.contains(BuiltInCapability.CREATE_EMPTY_PROJECT.getCapability()));
     }
 }

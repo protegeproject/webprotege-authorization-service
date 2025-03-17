@@ -5,7 +5,7 @@ import com.google.common.base.CaseFormat;
 import java.util.Arrays;
 import java.util.List;
 
-import static edu.stanford.protege.webprotege.authorization.BuiltInAction.*;
+import static edu.stanford.protege.webprotege.authorization.BuiltInCapability.*;
 
 /**
  * Matthew Horridge
@@ -125,31 +125,31 @@ public enum BuiltInRole {
 
     private final List<BuiltInRole> parents;
 
-    private final List<BuiltInAction> actions;
+    private final List<BuiltInCapability> capabilitys;
 
 
 
-    BuiltInRole(List<BuiltInRole> parents, List<BuiltInAction> actions) {
+    BuiltInRole(List<BuiltInRole> parents, List<BuiltInCapability> capabilitys) {
         this.roleId = new RoleId(CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, name()));
         this.parents = List.copyOf(parents);
-        this.actions = List.copyOf(actions);
+        this.capabilitys = List.copyOf(capabilitys);
     }
 
-    BuiltInRole(BuiltInAction... actions) {
-        this(List.of(), List.copyOf(Arrays.asList(actions)));
+    BuiltInRole(BuiltInCapability... capabilitys) {
+        this(List.of(), List.copyOf(Arrays.asList(capabilitys)));
     }
 
 
-    BuiltInRole(BuiltInRole parentRole, BuiltInAction... actions) {
-        this(List.of(parentRole), List.copyOf(Arrays.asList(actions)));
+    BuiltInRole(BuiltInRole parentRole, BuiltInCapability... capabilitys) {
+        this(List.of(parentRole), List.copyOf(Arrays.asList(capabilitys)));
     }
 
-    BuiltInRole(BuiltInRole parentRole1, BuiltInRole parentRole2, BuiltInAction... actions) {
-        this(List.of(parentRole1, parentRole2), List.copyOf(Arrays.asList(actions)));
+    BuiltInRole(BuiltInRole parentRole1, BuiltInRole parentRole2, BuiltInCapability... capabilitys) {
+        this(List.of(parentRole1, parentRole2), List.copyOf(Arrays.asList(capabilitys)));
     }
 
-    BuiltInRole(BuiltInRole parentRole1, BuiltInRole parentRole2, BuiltInRole parentRole3, BuiltInAction... actions) {
-        this(List.of(parentRole1, parentRole2, parentRole3), List.copyOf(Arrays.asList(actions)));
+    BuiltInRole(BuiltInRole parentRole1, BuiltInRole parentRole2, BuiltInRole parentRole3, BuiltInCapability... capabilitys) {
+        this(List.of(parentRole1, parentRole2, parentRole3), List.copyOf(Arrays.asList(capabilitys)));
     }
 
     public RoleId getRoleId() {
@@ -160,7 +160,9 @@ public enum BuiltInRole {
         return parents;
     }
 
-    public List<BuiltInAction> getActions() {
-        return actions;
+    public List<Capability> getCapabilities() {
+        return capabilitys.stream()
+                .map(BuiltInCapability::getCapability)
+                .toList();
     }
 }
