@@ -12,6 +12,7 @@ import javax.annotation.Nonnull;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
 /**
  * Matthew Horridge
  * Stanford Center for Biomedical Informatics Research
@@ -45,26 +46,24 @@ public class GetAuthorizedActionsHandler implements CommandHandler<GetAuthorized
 
     @Override
     public Mono<GetAuthorizedActionsResponse> handleRequest(GetAuthorizedActionsRequest request, ExecutionContext executionContext) {
+        Set<ActionId> actions = new HashSet<>();
 
-        if(request.resource().isApplication()) {
-            try {
-                List<RoleId> roleIds = tokenValidator.getTokenClaims(executionContext.jwt()).stream()
-                        .map(RoleId::new)
-                        .toList();
-                Set<ActionId> actions  = new HashSet<>(roleOracle.getActionsAssociatedToRoles(roleIds));
-                return Mono.just(new GetAuthorizedActionsResponse(request.resource(),
-                        request.subject(),
-                        actions));
-
-            } catch (VerificationException e) {
-                throw new RuntimeException(e);
-            }
-        }else {
-            var actionClosure = accessManager.getActionClosure(request.subject(),
-                    request.resource());
-            return Mono.just(new GetAuthorizedActionsResponse(request.resource(),
-                    request.subject(),
-                    actionClosure));
+        try {
+            //extract any SUPER admin actions from token
+            List<RoleId> roleIds = tokenValidator.getTokenClaims(executionContext.jwt()).stream()
+                    .map(RoleId::new)
+                    .toList();
+            actions.addAll(new HashSet<>(roleOracle.getActionsAssociatedToRoles(roleIds)));
+        } catch (VerificationException e) {
+            throw new RuntimeException(e);
         }
+
+        actions.addAll(accessManager.getActionClosure(request.subject(),
+                request.resource()));
+
+        return Mono.just(new GetAuthorizedActionsResponse(request.resource(),
+                request.subject(),
+                actions));
+
     }
 }
