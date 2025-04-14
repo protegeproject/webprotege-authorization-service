@@ -10,8 +10,7 @@ import reactor.core.publisher.Mono;
 
 import javax.annotation.Nonnull;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+
 /**
  * Matthew Horridge
  * Stanford Center for Biomedical Informatics Research
@@ -45,27 +44,24 @@ public class GetAuthorizedActionsHandler implements CommandHandler<GetAuthorized
 
     @Override
     public Mono<GetAuthorizedCapabilitiesResponse> handleRequest(GetAuthorizedCapabilitiesRequest request, ExecutionContext executionContext) {
+        var capabilities = new HashSet<Capability>();
 
-        if(request.resource().isApplication()) {
-            try {
-                List<RoleId> roleIds = tokenValidator.getTokenClaims(executionContext.jwt()).stream()
-                        .map(RoleId::new)
-                        .toList();
-                Set<Capability> capabilities  = new HashSet<>(builtInRoleOracle.getCapabilitiesAssociatedToRoles(roleIds));
-                return Mono.just(new GetAuthorizedCapabilitiesResponse(request.resource(),
-                        request.subject(),
-                        capabilities));
-
-            } catch (VerificationException e) {
-                throw new RuntimeException(e);
-            }
-        }else {
-            var capabilityClosure = accessManager.getCapabilityClosure(request.subject(),
-                    request.resource());
-            logger.info("Retrieved capabilities for {}.  Capabilities: {}", request.subject(), capabilityClosure);
-            return Mono.just(new GetAuthorizedCapabilitiesResponse(request.resource(),
-                    request.subject(),
-                    capabilityClosure));
+        try {
+            //extract any SUPER admin capabilities from token
+            var roleIds = tokenValidator.getTokenClaims(executionContext.jwt()).stream()
+                    .map(RoleId::new)
+                    .toList();
+            capabilities.addAll(new HashSet<>(builtInRoleOracle.getCapabilitiesAssociatedToRoles(roleIds)));
+        } catch (VerificationException e) {
+            throw new RuntimeException(e);
         }
+
+        capabilities.addAll(accessManager.getCapabilityClosure(request.subject(),
+                request.resource()));
+
+        return Mono.just(new GetAuthorizedCapabilitiesResponse(request.resource(),
+                request.subject(),
+                capabilities));
+
     }
 }
