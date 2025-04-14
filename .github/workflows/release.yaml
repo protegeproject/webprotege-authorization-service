@@ -55,7 +55,7 @@ jobs:
           # Increment the base version (assuming semantic versioning)
           IFS='.' read -r -a version_parts <<< "$base_version"
           version_parts[2]=$((version_parts[2] + 1))
-          new_base_version="${version_parts[0]}.${version_parts[1]}.${version_parts[2]}"
+          new_base_version="${version_parts[0]}.${version_parts[1]}.${version_parts[2]}-WHO"
          
           echo "New version: $new_base_version"
           find . -name 'pom.xml' -exec mvn versions:set -DnewVersion=$new_base_version -DgenerateBackupPoms=false -f {} \;
