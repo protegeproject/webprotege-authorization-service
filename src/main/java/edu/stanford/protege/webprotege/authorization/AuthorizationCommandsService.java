@@ -1,6 +1,5 @@
 package edu.stanford.protege.webprotege.authorization;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.stanford.protege.webprotege.ipc.ExecutionContext;
 import org.keycloak.common.VerificationException;
 import org.springframework.stereotype.Service;
@@ -16,14 +15,14 @@ public class AuthorizationCommandsService {
 
     private final TokenValidator tokenValidator;
 
-    private final RoleOracle roleOracle;
+    private final BuiltInRoleOracle builtInRoleOracle;
 
-    public AuthorizationCommandsService(AccessManager accessManager, TokenValidator tokenValidator, RoleOracle roleOracle) {
+    public AuthorizationCommandsService(AccessManager accessManager, TokenValidator tokenValidator, BuiltInRoleOracle builtInRoleOracle) {
         this.accessManager = accessManager;
         this.tokenValidator = tokenValidator;
-        this.roleOracle = roleOracle;
+        this.builtInRoleOracle = builtInRoleOracle;
     }
-
+    // TODO:  Update this when Alex has committed the code
     public GetAuthorizationStatusResponse handleAuthorizationStatusCommand(GetAuthorizationStatusRequest request, ExecutionContext executionContext) {
         var hasPermission = false;
         if(request.resource().isApplication()) {
@@ -32,7 +31,7 @@ public class AuthorizationCommandsService {
                 roleIds = tokenValidator.getTokenClaims(executionContext.jwt()).stream()
                         .map(RoleId::new)
                         .toList();
-                Set<Capability> capabilities  = new HashSet<>(roleOracle.getCapabilitiesAssociatedToRoles(roleIds));
+                Set<Capability> capabilities  = new HashSet<>(builtInRoleOracle.getCapabilitiesAssociatedToRoles(roleIds));
                 hasPermission = capabilities.contains(request.capability());
 
             } catch (VerificationException e) {

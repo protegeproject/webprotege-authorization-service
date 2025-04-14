@@ -12,14 +12,14 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Stanford Center for Biomedical Informatics Research
  * 2023-06-01
  */
-public class RoleOracleImpl_Tests {
+public class BuiltInRoleOracleImpl_Tests {
 
-    private RoleOracleImpl roleOracle;
+    private BuiltInRoleOracleImpl roleOracle;
 
 
     @BeforeEach
     void setUp() {
-        roleOracle = RoleOracleImpl.get();
+        roleOracle = BuiltInRoleOracleImpl.get();
     }
 
     @Test

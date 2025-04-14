@@ -8,12 +8,12 @@ import java.util.Collection;
  * Stanford Center for Biomedical Informatics Research
  * 4 Jan 2017
  *
- * Provides access to the role closure for a given role id.
+ * Provides access to the role closure for a given built in role id.
  */
-public interface RoleOracle {
+public interface BuiltInRoleOracle {
 
     @Nonnull
-    Collection<Role> getRoleClosure(@Nonnull RoleId roleId);
+    Collection<RoleDefinition> getRoleClosure(@Nonnull RoleId roleId);
 
     Collection<Capability> getCapabilitiesAssociatedToRoles(Collection<RoleId> roleIds);
 

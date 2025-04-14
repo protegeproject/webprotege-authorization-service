@@ -24,12 +24,12 @@ public class GetAuthorizedActionsHandler implements CommandHandler<GetAuthorized
     private final AccessManager accessManager;
     private final TokenValidator tokenValidator;
 
-    private final RoleOracle roleOracle;
+    private final BuiltInRoleOracle builtInRoleOracle;
 
-    public GetAuthorizedActionsHandler(AccessManager accessManager, TokenValidator tokenValidator, RoleOracle roleOracle) {
+    public GetAuthorizedActionsHandler(AccessManager accessManager, TokenValidator tokenValidator, BuiltInRoleOracle builtInRoleOracle) {
         this.accessManager = accessManager;
         this.tokenValidator = tokenValidator;
-        this.roleOracle = roleOracle;
+        this.builtInRoleOracle = builtInRoleOracle;
     }
 
     @Nonnull
@@ -51,7 +51,7 @@ public class GetAuthorizedActionsHandler implements CommandHandler<GetAuthorized
                 List<RoleId> roleIds = tokenValidator.getTokenClaims(executionContext.jwt()).stream()
                         .map(RoleId::new)
                         .toList();
-                Set<Capability> capabilities  = new HashSet<>(roleOracle.getCapabilitiesAssociatedToRoles(roleIds));
+                Set<Capability> capabilities  = new HashSet<>(builtInRoleOracle.getCapabilitiesAssociatedToRoles(roleIds));
                 return Mono.just(new GetAuthorizedCapabilitiesResponse(request.resource(),
                         request.subject(),
                         capabilities));

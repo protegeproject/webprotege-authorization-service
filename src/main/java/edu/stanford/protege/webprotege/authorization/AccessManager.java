@@ -1,6 +1,8 @@
 package edu.stanford.protege.webprotege.authorization;
 
 
+import edu.stanford.protege.webprotege.common.ProjectId;
+
 import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.Set;
@@ -77,4 +79,6 @@ public interface AccessManager {
      * Rebuilds the role and capability closure for all subjects and resources.
      */
     void rebuild();
+
+    void rebuild(ProjectId projectId);
 }

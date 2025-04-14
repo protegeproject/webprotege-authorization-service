@@ -26,12 +26,12 @@ public class GetAuthorizationStatusHandler implements CommandHandler<GetAuthoriz
 
     private final TokenValidator tokenValidator;
 
-    private final RoleOracle roleOracle;
+    private final BuiltInRoleOracle builtInRoleOracle;
 
-    public GetAuthorizationStatusHandler(AccessManager accessManager, TokenValidator tokenValidator, RoleOracle roleOracle) {
+    public GetAuthorizationStatusHandler(AccessManager accessManager, TokenValidator tokenValidator, BuiltInRoleOracle builtInRoleOracle) {
         this.accessManager = accessManager;
         this.tokenValidator = tokenValidator;
-        this.roleOracle = roleOracle;
+        this.builtInRoleOracle = builtInRoleOracle;
     }
 
     @Nonnull
@@ -54,7 +54,7 @@ public class GetAuthorizationStatusHandler implements CommandHandler<GetAuthoriz
                 roleIds = tokenValidator.getTokenClaims(executionContext.jwt()).stream()
                         .map(RoleId::new)
                         .toList();
-                Set<Capability> capabilities  = new HashSet<>(roleOracle.getCapabilitiesAssociatedToRoles(roleIds));
+                Set<Capability> capabilities  = new HashSet<>(builtInRoleOracle.getCapabilitiesAssociatedToRoles(roleIds));
                 hasPermission = capabilities.contains(request.capability());
 
             } catch (VerificationException e) {

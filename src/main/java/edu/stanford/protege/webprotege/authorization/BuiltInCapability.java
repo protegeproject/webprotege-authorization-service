@@ -121,9 +121,6 @@ public enum BuiltInCapability {
 
     EDIT_FORMS;
 
-
-
-
     private final BasicCapability capability;
 
     BuiltInCapability() {

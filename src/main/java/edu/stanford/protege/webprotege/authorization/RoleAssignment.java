@@ -33,7 +33,7 @@ public class RoleAssignment {
 
     public static final String PROJECT_ID = "projectId";
 
-    public static final String ACTION_CLOSURE = "capabilityClosure";
+    public static final String CAPABILITY_CLOSURE = "capabilityClosure";
 
     public static final String ROLE_CLOSURE = "roleClosure";
 
