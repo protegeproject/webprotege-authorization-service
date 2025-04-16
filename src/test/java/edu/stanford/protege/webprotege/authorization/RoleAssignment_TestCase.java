@@ -29,13 +29,13 @@ class RoleAssignment_TestCase {
 
     private List<String> roleClosure;
 
-    private List<String> actionClosure;
+    private List<Capability> actionClosure;
 
     @BeforeEach
     public void setUp() {
         assignedRoles = singletonList("AssignedRole");
         roleClosure = asList("AssignedRole", "ParentRole");
-        actionClosure = asList("ActionA", "ActionB");
+        actionClosure = asList(BasicCapability.valueOf("CapA"), BasicCapability.valueOf("CapB"));
         roleAssignment = new RoleAssignment(userName, projectId, assignedRoles, roleClosure, actionClosure);
     }
 
@@ -90,7 +90,7 @@ class RoleAssignment_TestCase {
 
     @Test
     public void shouldReturnSupplied_actionClosure() {
-        assertThat(roleAssignment.getActionClosure(), is(this.actionClosure));
+        assertThat(roleAssignment.getCapabilityClosure(), is(this.actionClosure));
     }
 
     @Test
@@ -131,7 +131,7 @@ class RoleAssignment_TestCase {
 
     @Test
     public void shouldNotBeEqualToOtherThatHasDifferent_actionClosure() {
-        assertThat(roleAssignment, is(not(new RoleAssignment(userName, projectId, assignedRoles, roleClosure, singletonList("OtherActionClosure")))));
+        assertThat(roleAssignment, is(not(new RoleAssignment(userName, projectId, assignedRoles, roleClosure, singletonList(BasicCapability.valueOf("OtherCap"))))));
     }
 
     @Test

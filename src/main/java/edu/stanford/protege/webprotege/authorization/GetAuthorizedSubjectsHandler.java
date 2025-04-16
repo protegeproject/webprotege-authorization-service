@@ -36,10 +36,10 @@ public class GetAuthorizedSubjectsHandler implements CommandHandler<GetAuthorize
     @Override
     public Mono<GetAuthorizedSubjectsResponse> handleRequest(GetAuthorizedSubjectsRequest request, ExecutionContext executionContext) {
         var subjects = accessManager.getSubjectsWithAccessToResource(request.resource(),
-                                                      request.actionId());
+                                                      request.capability());
 
         return Mono.just(new GetAuthorizedSubjectsResponse(request.resource(),
-                                                           request.actionId(),
+                                                           request.capability(),
                                                            Set.copyOf(subjects)));
     }
 }
