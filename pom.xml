@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>edu.stanford.protege</groupId>
 	<artifactId>webprotege-authorization-service</artifactId>
-	<version>1.0.12-WHO</version>
+	<version>1.0.13-WHO</version>
 	<name>webprotege-authorization-service</name>
 	<description>A service that checks users are authorized to execute operations in WebProtége</description>
 	<properties>
