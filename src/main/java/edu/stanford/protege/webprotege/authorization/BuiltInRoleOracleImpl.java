@@ -25,7 +25,11 @@ public class BuiltInRoleOracleImpl implements BuiltInRoleOracle {
                                                   .map(BuiltInRole::getRoleId)
                                                   .collect(toList());
             List<Capability> capabilities = new ArrayList<>(builtInRole.getCapabilities());
-            impl.addRole(RoleDefinition.get(builtInRole.getRoleId(), builtInRole.getRoleType(), Set.copyOf(parentRoles), Set.copyOf(capabilities), ""));
+            impl.addRole(RoleDefinition.get(builtInRole.getRoleId(),
+                    builtInRole.getRoleType(),
+                    Set.copyOf(parentRoles),
+                    Set.copyOf(capabilities)
+                    , builtInRole.getLabel(), ""));
         }
         return impl;
     }
