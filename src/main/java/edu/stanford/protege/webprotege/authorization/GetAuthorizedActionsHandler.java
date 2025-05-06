@@ -10,8 +10,6 @@ import reactor.core.publisher.Mono;
 
 import javax.annotation.Nonnull;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Matthew Horridge
@@ -19,51 +17,51 @@ import java.util.Set;
  * 2021-08-09
  */
 @WebProtegeHandler
-public class GetAuthorizedActionsHandler implements CommandHandler<GetAuthorizedActionsRequest, GetAuthorizedActionsResponse> {
+public class GetAuthorizedActionsHandler implements CommandHandler<GetAuthorizedCapabilitiesRequest, GetAuthorizedCapabilitiesResponse> {
     private final static Logger logger = LoggerFactory.getLogger(GetAuthorizedActionsHandler.class);
 
     private final AccessManager accessManager;
     private final TokenValidator tokenValidator;
 
-    private final RoleOracle roleOracle;
+    private final BuiltInRoleOracle builtInRoleOracle;
 
-    public GetAuthorizedActionsHandler(AccessManager accessManager, TokenValidator tokenValidator, RoleOracle roleOracle) {
+    public GetAuthorizedActionsHandler(AccessManager accessManager, TokenValidator tokenValidator, BuiltInRoleOracle builtInRoleOracle) {
         this.accessManager = accessManager;
         this.tokenValidator = tokenValidator;
-        this.roleOracle = roleOracle;
+        this.builtInRoleOracle = builtInRoleOracle;
     }
 
     @Nonnull
     @Override
     public String getChannelName() {
-        return GetAuthorizedActionsRequest.CHANNEL;
+        return GetAuthorizedCapabilitiesRequest.CHANNEL;
     }
 
     @Override
-    public Class<GetAuthorizedActionsRequest> getRequestClass() {
-        return GetAuthorizedActionsRequest.class;
+    public Class<GetAuthorizedCapabilitiesRequest> getRequestClass() {
+        return GetAuthorizedCapabilitiesRequest.class;
     }
 
     @Override
-    public Mono<GetAuthorizedActionsResponse> handleRequest(GetAuthorizedActionsRequest request, ExecutionContext executionContext) {
-        Set<ActionId> actions = new HashSet<>();
+    public Mono<GetAuthorizedCapabilitiesResponse> handleRequest(GetAuthorizedCapabilitiesRequest request, ExecutionContext executionContext) {
+        var capabilities = new HashSet<Capability>();
 
         try {
-            //extract any SUPER admin actions from token
-            List<RoleId> roleIds = tokenValidator.getTokenClaims(executionContext.jwt()).stream()
+            //extract any SUPER admin capabilities from token
+            var roleIds = tokenValidator.getTokenClaims(executionContext.jwt()).stream()
                     .map(RoleId::new)
                     .toList();
-            actions.addAll(new HashSet<>(roleOracle.getActionsAssociatedToRoles(roleIds)));
+            capabilities.addAll(new HashSet<>(builtInRoleOracle.getCapabilitiesAssociatedToRoles(roleIds)));
         } catch (VerificationException e) {
             throw new RuntimeException(e);
         }
 
-        actions.addAll(accessManager.getActionClosure(request.subject(),
+        capabilities.addAll(accessManager.getCapabilityClosure(request.subject(),
                 request.resource()));
 
-        return Mono.just(new GetAuthorizedActionsResponse(request.resource(),
+        return Mono.just(new GetAuthorizedCapabilitiesResponse(request.resource(),
                 request.subject(),
-                actions));
+                capabilities));
 
     }
 }

@@ -36,10 +36,10 @@ public class GetAuthorizedResourcesHandler implements CommandHandler<GetAuthoriz
     @Override
     public Mono<GetAuthorizedResourcesResponse> handleRequest(GetAuthorizedResourcesRequest request, ExecutionContext executionContext) {
         var resources = accessManager.getResourcesAccessibleToSubject(request.subject(),
-                                                      request.actionId());
+                                                      request.capability());
 
         return Mono.just(new GetAuthorizedResourcesResponse(request.subject(),
-                                                            request.actionId(),
+                                                            request.capability(),
                                                             Set.copyOf(resources)));
     }
 }
