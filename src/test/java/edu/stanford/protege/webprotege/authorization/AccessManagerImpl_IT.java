@@ -1,19 +1,13 @@
 package edu.stanford.protege.webprotege.authorization;
 
 import com.mongodb.client.MongoCollection;
-import edu.stanford.protege.webprotege.ipc.WebProtegeIpcApplication;
-import edu.stanford.protege.webprotege.ipc.impl.RabbitMqConfiguration;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.*;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 
@@ -40,8 +34,6 @@ class AccessManagerImpl_IT {
     private static final String ASSIGNED_ROLES_FIELD = "assignedRoles";
 
     private static final String ROLE_CLOSURE_FIELD = "roleClosure";
-
-    private static final String ACTION_CLOSURE_FIELD = "actionClosure";
 
     @Autowired
     private AccessManagerImpl manager;
@@ -90,8 +82,12 @@ class AccessManagerImpl_IT {
     @Test
     public void shouldStoreActionClosure() {
         assertThat(storedDocument, is(notNullValue()));
-        assertThat((List<String>) storedDocument.get(ACTION_CLOSURE_FIELD), hasItems("ViewProject"));
+        var expected = new Document("@type", "BasicCapability");
+        expected.put("id", "ViewProject");
+        assertThat((List<Document>) storedDocument.get("capabilityClosure"), hasItems(expected));
     }
+
+    // TODO: Generic capabilities
 
     @Test
     public void shouldNotStoreDuplicate() {
@@ -114,7 +110,7 @@ class AccessManagerImpl_IT {
     @Test
     public void shouldRebuildRoleClosure() {
         getCollection().updateOne(userQuery, new Document("$set", new Document("roleClosure", emptyList())));
-        getCollection().updateOne(userQuery, new Document("$set", new Document("actionClosure", emptyList())));
+        getCollection().updateOne(userQuery, new Document("$set", new Document("capabilityClosure", emptyList())));
         manager.rebuild();
         Document rebuiltDocument = getCollection().find().first();
         assertThat((List<String>) rebuiltDocument.get(ROLE_CLOSURE_FIELD), hasItems("CanView"));
@@ -123,10 +119,13 @@ class AccessManagerImpl_IT {
     @Test
     public void shouldRebuildActionClosure() {
         getCollection().updateOne(userQuery, new Document("$set", new Document("roleClosure", emptyList())));
-        getCollection().updateOne(userQuery, new Document("$set", new Document("actionClosure", emptyList())));
+        getCollection().updateOne(userQuery, new Document("$set", new Document("capabilityClosure", emptyList())));
         manager.rebuild();
         Document rebuiltDocument = getCollection().find().first();
-        assertThat((List<String>) rebuiltDocument.get(ACTION_CLOSURE_FIELD), hasItems("ViewProject"));
+        Document expected = new Document();
+        expected.put("@type", "BasicCapability");
+        expected.put("id", "ViewProject");
+        assertThat((List<Document>) rebuiltDocument.get("capabilityClosure"), hasItems(expected));
     }
 
     @AfterEach

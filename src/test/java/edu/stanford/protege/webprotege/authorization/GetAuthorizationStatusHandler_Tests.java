@@ -7,7 +7,6 @@ import edu.stanford.protege.webprotege.common.WebProtegeCommonConfiguration;
 import edu.stanford.protege.webprotege.ipc.CommandExecutor;
 import edu.stanford.protege.webprotege.ipc.ExecutionContext;
 import edu.stanford.protege.webprotege.ipc.WebProtegeIpcApplication;
-import edu.stanford.protege.webprotege.ipc.impl.CommandExecutorImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,8 +14,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 
 import java.util.concurrent.ExecutionException;
@@ -57,7 +54,7 @@ public class GetAuthorizationStatusHandler_Tests {
     void shouldExecuteCommand() throws InterruptedException, ExecutionException {
         var subject = Subject.forUser(UserId.valueOf("Fred Smith"));
         var resource = new ProjectResource(ProjectId.generate());
-        var request = new GetAuthorizationStatusRequest(resource, subject, BuiltInAction.CREATE_CLASS.getActionId());
+        var request = new GetAuthorizationStatusRequest(resource, subject, BuiltInCapability.CREATE_CLASS.getCapability());
         var responseFuture = commandExecutor.execute(request, new ExecutionContext());
         var response = responseFuture.get();
         assertThat(response.subject()).isEqualTo(subject);
