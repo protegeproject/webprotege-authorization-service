@@ -208,7 +208,7 @@ public class AccessManagerImpl implements AccessManager {
     private Collection<Subject> getSubjectsWithAccessToResource(Resource resource, Optional<Capability> capability) {
         var projectId = toProjectIdString(resource);
         var query = query(where(PROJECT_ID).is(projectId));
-        capability.ifPresent(a -> query.addCriteria(where(CAPABILITY_CLOSURE).in(a.id())));
+        capability.ifPresent(a -> query.addCriteria(where(CAPABILITY_CLOSURE+".id").in(a.id())));
         return find(query)
                 .map(f -> objectMapper.convertValue(f, RoleAssignment.class))
                 .map(ra -> {
