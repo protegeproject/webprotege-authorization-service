@@ -222,7 +222,7 @@ public class AccessManagerImpl implements AccessManager {
     public Collection<Resource> getResourcesAccessibleToSubject(Subject subject, Capability capability) {
         var userName = toUserName(subject);
         logger.info("Trying to fetch resources {} and capability {}", userName, capability.id());
-        var query = query(where(USER_NAME).is(userName).and(CAPABILITY_CLOSURE).is(capability.id()));
+        var query = query(where(USER_NAME).is(userName).and(CAPABILITY_CLOSURE+".id").is(capability.id()));
         return find(query)
                 .map(f -> objectMapper.convertValue(f, RoleAssignment.class))
                 .map(ra -> {
