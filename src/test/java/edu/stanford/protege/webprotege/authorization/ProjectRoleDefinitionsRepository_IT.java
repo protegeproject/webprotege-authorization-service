@@ -2,13 +2,17 @@ package edu.stanford.protege.webprotege.authorization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.stanford.protege.webprotege.common.ProjectId;
+import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Set;
 
@@ -33,7 +37,7 @@ class ProjectRoleDefinitionsRepository_IT {
         mongoTemplate.getCollection("ProjectRoleDefinitions").drop();
         repository = new ProjectRoleDefinitionsRepository(mongoTemplate, objectMapper);
         roleDefinitions = List.of(
-            new RoleDefinition(RoleId.valueOf("ProjectEditor"), RoleType.PROJECT_ROLE, Set.of(RoleId.valueOf("ProjectViewer")), Set.of(), "Testing role")
+            new RoleDefinition(RoleId.valueOf("ProjectEditor"), RoleType.PROJECT_ROLE, Set.of(RoleId.valueOf("ProjectViewer")), Set.of(), "Testing label","Testing role")
         );
     }
 
@@ -48,6 +52,13 @@ class ProjectRoleDefinitionsRepository_IT {
 
         // Then
         assertThat(retrieved).contains(ProjectRoleDefinitionsRecord.get(projectId, roleDefinitions));
+
+        var revisionsCollection = mongoTemplate.getCollection("ProjectRoleDefinitions_revisions");
+        var revision = revisionsCollection.find(new Document("projectId", projectId.value())).first();
+        assertThat(revision).isNotNull();
+        var revisionDateTime = revision.getString("revisionDateTime" );
+        assertThat(revisionDateTime).isNotNull();
+        assertThat(revisionDateTime).satisfies(dt -> OffsetDateTime.parse(dt, DateTimeFormatter.ISO_DATE_TIME));
     }
 
     @Test
@@ -82,8 +93,8 @@ class ProjectRoleDefinitionsRepository_IT {
         var projectId = ProjectId.valueOf("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
         var initialDefinitions = roleDefinitions;
         var updatedDefinitions = List.of(
-                new RoleDefinition(RoleId.valueOf("ProjectEditor"), RoleType.PROJECT_ROLE, Set.of(RoleId.valueOf("ProjectViewer")), Set.of(), "Testing role"),
-                new RoleDefinition(RoleId.valueOf("ProjectManager"), RoleType.PROJECT_ROLE, Set.of(RoleId.valueOf("ProjectEditor")), Set.of(), "Testing role")
+                new RoleDefinition(RoleId.valueOf("ProjectEditor"), RoleType.PROJECT_ROLE, Set.of(RoleId.valueOf("ProjectViewer")), Set.of(), "Testing label","Testing role"),
+                new RoleDefinition(RoleId.valueOf("ProjectManager"), RoleType.PROJECT_ROLE, Set.of(RoleId.valueOf("ProjectEditor")), Set.of(), "Testing label", "Testing role")
         );
 
         // When
