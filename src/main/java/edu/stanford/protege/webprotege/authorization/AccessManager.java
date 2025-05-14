@@ -5,6 +5,7 @@ import edu.stanford.protege.webprotege.common.ProjectId;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -81,4 +82,6 @@ public interface AccessManager {
     void rebuild();
 
     void rebuild(ProjectId projectId);
+
+    List<RoleAssignment> getRoleAssignments(ProjectId projectId);
 }

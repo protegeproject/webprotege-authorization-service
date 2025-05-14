@@ -5,13 +5,20 @@ import com.mongodb.client.model.ReplaceOptions;
 import edu.stanford.protege.webprotege.common.ProjectId;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Nullable;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 @Component
 public class ProjectRoleDefinitionsRepository {
+
     private static final String COLLECTION_NAME = "ProjectRoleDefinitions";
+
+    private static final String REVISIONS_COLLECTION_NAME = "ProjectRoleDefinitions_revisions";
 
     private final MongoTemplate mongoTemplate;
 
@@ -24,10 +31,34 @@ public class ProjectRoleDefinitionsRepository {
 
     public synchronized void saveProjectRoleDefinitions(ProjectRoleDefinitionsRecord record) {
         var document = objectMapper.convertValue(record, Document.class);
+        document.put("_id", record.projectId().value());
+        document.remove("projectId");
         var collection = mongoTemplate.getCollection(COLLECTION_NAME);
         var query = new Document("_id", record.projectId().value());
         collection.replaceOne(query, document, new ReplaceOptions().upsert(true));
+        var revisionsCollection = mongoTemplate.getCollection(REVISIONS_COLLECTION_NAME);
+        document.put("projectId", record.projectId().value());
+        document.remove("_id");
+        var dateTime = Instant.now();
+        var dateTimeStamp = DateTimeFormatter.ISO_INSTANT.format(dateTime);
+        document.put("revisionDateTime", dateTimeStamp);
+        revisionsCollection.insertOne(document);
+
     }
+
+    private static Integer getRevisionNumber(@Nullable Document document) {
+        if(document == null) {
+            return 1;
+        }
+        var revisionNumber = document.getInteger("revision");
+        if(revisionNumber == null) {
+            return 1;
+        }
+        else {
+            return revisionNumber;
+        }
+    }
+
 
     public synchronized void clearProjectRoleDefinitions(ProjectId projectId) {
         var collection = mongoTemplate.getCollection(COLLECTION_NAME);

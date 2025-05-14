@@ -237,6 +237,14 @@ public class AccessManagerImpl implements AccessManager {
     }
 
     @Override
+    public List<RoleAssignment> getRoleAssignments(ProjectId projectId) {
+        var query = query(where(PROJECT_ID).is(projectId.value()));
+        return find(query)
+                .map(f -> objectMapper.convertValue(f, RoleAssignment.class))
+                .toList();
+    }
+
+    @Override
     public void rebuild() {
         logger.info("Rebuilding permissions");
         var queryObject = new Query().getQueryObject();
