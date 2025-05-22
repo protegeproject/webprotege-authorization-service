@@ -124,13 +124,9 @@ public class ProjectRoleDefinitionsManager {
         var cyclePath = new ArrayList<RoleId>();
         cyclePath.add(currentRoleId);
         var current = currentRoleId;
-        while (toProcess.contains(current)) {
-            Iterator<RoleId> iter = roleDefinitionsMap.get(current).parentRoles().iterator();
-            if(iter.hasNext()) {
-                current = iter.next();
-                cyclePath.add(current);
-            }
-
+        while (toProcess.contains(current) && roleDefinitionsMap.get(current).parentRoles().iterator().hasNext()) {
+            current = roleDefinitionsMap.get(current).parentRoles().iterator().next();
+            cyclePath.add(current);
         }
         logger.warn("Cycle detected in role hierarchy: {}", String.join(" -> ",
                 cyclePath.stream().map(RoleId::id).toList()));
