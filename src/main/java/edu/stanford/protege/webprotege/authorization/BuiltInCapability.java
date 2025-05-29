@@ -119,7 +119,21 @@ public enum BuiltInCapability {
 
     UPLOAD_AND_MERGE_ADDITIONS,
 
-    EDIT_FORMS;
+    EDIT_FORMS,
+
+    APPLY_MIGRATION_JSON_FILES,
+
+    ICD_HIERARCHY_EDITOR,
+
+    ICF_HIERARCHY_EDITOR,
+
+    ICHI_HIERARCHY_EDITOR,
+
+    ICD_HIERARCHY_VIEWER,
+
+    ICF_HIERARCHY_VIEWER,
+
+    ICHI_HIERARCHY_VIEWER;
 
     private final BasicCapability capability;
 
