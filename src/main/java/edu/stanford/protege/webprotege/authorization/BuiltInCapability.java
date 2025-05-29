@@ -123,17 +123,13 @@ public enum BuiltInCapability {
 
     APPLY_MIGRATION_JSON_FILES,
 
-    ICD_HIERARCHY_EDITOR,
-
-    ICF_HIERARCHY_EDITOR,
-
-    ICHI_HIERARCHY_EDITOR,
-
     ICD_HIERARCHY_VIEWER,
 
     ICF_HIERARCHY_VIEWER,
 
-    ICHI_HIERARCHY_VIEWER;
+    ICHI_HIERARCHY_VIEWER,
+
+    FULL_HIERARCHY_VIEWER;
 
     private final BasicCapability capability;
 
