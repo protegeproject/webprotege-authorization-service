@@ -3,6 +3,8 @@ package edu.stanford.protege.webprotege.authorization;
 import edu.stanford.protege.webprotege.ipc.AuthorizedCommandHandler;
 import edu.stanford.protege.webprotege.ipc.ExecutionContext;
 import edu.stanford.protege.webprotege.ipc.WebProtegeHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Nonnull;
@@ -13,6 +15,8 @@ import java.util.List;
 public class SetProjectRoleDefinitionsHandler implements AuthorizedCommandHandler<SetProjectRoleDefinitionsRequest, SetProjectRoleDefinitionsResponse> {
 
     private final AccessManager accessManager;
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(SetProjectRoleDefinitionsHandler.class);
 
     public SetProjectRoleDefinitionsHandler(AccessManager accessManager, ProjectRoleDefinitionsManager roleDefinitionsManager) {
         this.accessManager = accessManager;
@@ -46,9 +50,13 @@ public class SetProjectRoleDefinitionsHandler implements AuthorizedCommandHandle
 
     @Override
     public Mono<SetProjectRoleDefinitionsResponse> handleRequest(SetProjectRoleDefinitionsRequest request, ExecutionContext executionContext) {
-        roleDefinitionsManager.setProjectRoleDefinitions(request.projectId(),
-                request.roleDefinitions());
-        accessManager.rebuild(request.projectId());
+        try {
+            roleDefinitionsManager.setProjectRoleDefinitions(request.projectId(),
+                    request.roleDefinitions());
+            accessManager.rebuild(request.projectId());
+        } catch (Exception e) {
+            LOGGER.error("Error on SetProjectRoleDefinitions. ",  e);
+        }
         return Mono.just(SetProjectRoleDefinitionsResponse.get(request.roleDefinitions()));
     }
 }

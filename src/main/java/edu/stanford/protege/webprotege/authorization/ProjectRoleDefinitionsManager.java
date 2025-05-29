@@ -124,7 +124,7 @@ public class ProjectRoleDefinitionsManager {
         var cyclePath = new ArrayList<RoleId>();
         cyclePath.add(currentRoleId);
         var current = currentRoleId;
-        while (toProcess.contains(current)) {
+        while (toProcess.contains(current) && roleDefinitionsMap.get(current).parentRoles().iterator().hasNext()) {
             current = roleDefinitionsMap.get(current).parentRoles().iterator().next();
             cyclePath.add(current);
         }

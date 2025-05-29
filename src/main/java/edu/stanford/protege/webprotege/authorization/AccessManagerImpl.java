@@ -208,7 +208,7 @@ public class AccessManagerImpl implements AccessManager {
     private Collection<Subject> getSubjectsWithAccessToResource(Resource resource, Optional<Capability> capability) {
         var projectId = toProjectIdString(resource);
         var query = query(where(PROJECT_ID).is(projectId));
-        capability.ifPresent(a -> query.addCriteria(where(CAPABILITY_CLOSURE).in(a.id())));
+        capability.ifPresent(a -> query.addCriteria(where(CAPABILITY_CLOSURE+".id").in(a.id())));
         return find(query)
                 .map(f -> objectMapper.convertValue(f, RoleAssignment.class))
                 .map(ra -> {
@@ -221,7 +221,8 @@ public class AccessManagerImpl implements AccessManager {
     @Override
     public Collection<Resource> getResourcesAccessibleToSubject(Subject subject, Capability capability) {
         var userName = toUserName(subject);
-        var query = query(where(USER_NAME).is(userName).and(CAPABILITY_CLOSURE).is(capability.id()));
+        logger.info("Trying to fetch resources {} and capability {}", userName, capability.id());
+        var query = query(where(USER_NAME).is(userName).and(CAPABILITY_CLOSURE+".id").is(capability.id()));
         return find(query)
                 .map(f -> objectMapper.convertValue(f, RoleAssignment.class))
                 .map(ra -> {
