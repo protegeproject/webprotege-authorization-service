@@ -6,6 +6,8 @@ import org.bson.BsonDocument;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -34,6 +36,7 @@ public class AccessManagerImpl implements AccessManager {
     private static final Logger logger = LoggerFactory.getLogger(AccessManagerImpl.class);
 
     public static final String COLLECTION_NAME = "RoleAssignments";
+    private static final String ROLE_ASSIGNMENTS_CACHE = "roleAssignments";
 
     private final ObjectMapper objectMapper;
 
@@ -74,6 +77,7 @@ public class AccessManagerImpl implements AccessManager {
         return resource.getProjectId().map(ProjectId::id).orElse(null);
     }
 
+    @CacheEvict(value = ROLE_ASSIGNMENTS_CACHE, allEntries = true)
     @Override
     public void setAssignedRoles(@Nonnull Subject subject,
                                  @Nonnull Resource resource,
@@ -236,6 +240,7 @@ public class AccessManagerImpl implements AccessManager {
                 .collect(toList());
     }
 
+    @Cacheable(value = ROLE_ASSIGNMENTS_CACHE, key = "#projectId.value()", unless = "#result.isEmpty()")
     @Override
     public List<RoleAssignment> getRoleAssignments(ProjectId projectId) {
         var query = query(where(PROJECT_ID).is(projectId.value()));
@@ -244,6 +249,7 @@ public class AccessManagerImpl implements AccessManager {
                 .toList();
     }
 
+    @CacheEvict(value = ROLE_ASSIGNMENTS_CACHE, allEntries = true)
     @Override
     public void rebuild() {
         logger.info("Rebuilding permissions");
@@ -251,6 +257,7 @@ public class AccessManagerImpl implements AccessManager {
         rebuildMatchingRoleAssignments(queryObject);
     }
 
+    @CacheEvict(value = ROLE_ASSIGNMENTS_CACHE, key = "#projectId.value()")
     @Override
     public void rebuild(ProjectId projectId) {
         logger.info("Rebuilding permissions for project: {}", projectId);
