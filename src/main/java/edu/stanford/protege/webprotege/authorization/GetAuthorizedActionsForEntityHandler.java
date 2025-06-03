@@ -57,7 +57,7 @@ public class GetAuthorizedActionsForEntityHandler implements CommandHandler<GetA
         var resource = ProjectResource.forProject(request.projectId());
 
         try {
-            var roleIds = tokenValidator.getTokenClaims(executionContext.jwt()).stream()
+            var roleIds = tokenValidator.extractClaimsWithoutVerification(executionContext.jwt()).stream()
                     .map(RoleId::new)
                     .toList();
             capabilities.addAll(new HashSet<>(builtInRoleOracle.getCapabilitiesAssociatedToRoles(roleIds)));
