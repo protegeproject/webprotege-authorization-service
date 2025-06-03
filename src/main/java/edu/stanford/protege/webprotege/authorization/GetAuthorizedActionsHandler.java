@@ -48,7 +48,7 @@ public class GetAuthorizedActionsHandler implements CommandHandler<GetAuthorized
 
         try {
             //extract any SUPER admin capabilities from token
-            var roleIds = tokenValidator.getTokenClaims(executionContext.jwt()).stream()
+            var roleIds = tokenValidator.extractClaimsWithoutVerification(executionContext.jwt()).stream()
                     .map(RoleId::new)
                     .toList();
             capabilities.addAll(new HashSet<>(builtInRoleOracle.getCapabilitiesAssociatedToRoles(roleIds)));

@@ -51,7 +51,7 @@ public class GetAuthorizationStatusHandler implements CommandHandler<GetAuthoriz
         if(request.resource().isApplication()) {
             List<RoleId> roleIds;
             try {
-                roleIds = tokenValidator.getTokenClaims(executionContext.jwt()).stream()
+                roleIds = tokenValidator.extractClaimsWithoutVerification(executionContext.jwt()).stream()
                         .map(RoleId::new)
                         .toList();
                 Set<Capability> capabilities  = new HashSet<>(builtInRoleOracle.getCapabilitiesAssociatedToRoles(roleIds));
