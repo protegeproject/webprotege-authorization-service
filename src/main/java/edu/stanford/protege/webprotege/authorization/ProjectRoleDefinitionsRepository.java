@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.model.ReplaceOptions;
 import edu.stanford.protege.webprotege.common.ProjectId;
 import org.bson.Document;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Component;
@@ -17,11 +19,10 @@ import java.util.Optional;
 public class ProjectRoleDefinitionsRepository {
 
     private static final String COLLECTION_NAME = "ProjectRoleDefinitions";
-
     private static final String REVISIONS_COLLECTION_NAME = "ProjectRoleDefinitions_revisions";
+    private static final String CACHE_NAME = "projectRoleDefinitions";
 
     private final MongoTemplate mongoTemplate;
-
     private final ObjectMapper objectMapper;
 
     public ProjectRoleDefinitionsRepository(MongoTemplate mongoTemplate, ObjectMapper objectMapper) {
@@ -29,6 +30,7 @@ public class ProjectRoleDefinitionsRepository {
         this.objectMapper = objectMapper;
     }
 
+    @CacheEvict(value = CACHE_NAME, key = "#record.projectId().value()")
     public synchronized void saveProjectRoleDefinitions(ProjectRoleDefinitionsRecord record) {
         var document = objectMapper.convertValue(record, Document.class);
         document.put("_id", record.projectId().value());
@@ -43,7 +45,6 @@ public class ProjectRoleDefinitionsRepository {
         var dateTimeStamp = DateTimeFormatter.ISO_INSTANT.format(dateTime);
         document.put("revisionDateTime", dateTimeStamp);
         revisionsCollection.insertOne(document);
-
     }
 
     private static Integer getRevisionNumber(@Nullable Document document) {
@@ -59,12 +60,13 @@ public class ProjectRoleDefinitionsRepository {
         }
     }
 
-
+    @CacheEvict(value = CACHE_NAME, key = "#projectId.value()")
     public synchronized void clearProjectRoleDefinitions(ProjectId projectId) {
         var collection = mongoTemplate.getCollection(COLLECTION_NAME);
         collection.deleteOne(new Document("_id", projectId.value()));
     }
 
+    @Cacheable(value = CACHE_NAME, key = "#projectId.value()", unless = "#result == null")
     public synchronized Optional<ProjectRoleDefinitionsRecord> getProjectRoleDefinitions(ProjectId projectId) {
         var query = new Document("_id", projectId.value());
         var collection = mongoTemplate.getCollection(COLLECTION_NAME);
@@ -77,6 +79,4 @@ public class ProjectRoleDefinitionsRepository {
             return Optional.of(record);
         }
     }
-
-
 }
