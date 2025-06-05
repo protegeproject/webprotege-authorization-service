@@ -182,17 +182,9 @@ public class AccessManagerImpl implements AccessManager {
 
     @Override
     public boolean hasPermission(@Nonnull Subject subject, @Nonnull Resource resource, @Nonnull Capability capability) {
-        logger.info("Checking permission for subject {} and resource {} with capability: {}", subject, resource, capability);
-
-        var match = find(withUserOrAnyUserAndTarget(subject, resource))
+        return find(withUserOrAnyUserAndTarget(subject, resource))
                 .map(d -> objectMapper.convertValue(d, RoleAssignment.class))
                 .anyMatch(roleAssignment -> roleAssignment.getCapabilityClosure().contains(capability));
-
-//        var query = withUserOrAnyUserAndTarget(subject, resource)
-//                .addCriteria(where(ACTION_CLOSURE).is(capability.id()))
-//                .limit(1);
-//        return mongoTemplate.count(query, RoleAssignment.class) == 1;
-        return match;
     }
 
     @Override
@@ -208,9 +200,9 @@ public class AccessManagerImpl implements AccessManager {
     private Collection<Subject> getSubjectsWithAccessToResource(Resource resource, Optional<Capability> capability) {
         var projectId = toProjectIdString(resource);
         var query = query(where(PROJECT_ID).is(projectId));
-        capability.ifPresent(a -> query.addCriteria(where(CAPABILITY_CLOSURE).in(a.id())));
         return find(query)
                 .map(f -> objectMapper.convertValue(f, RoleAssignment.class))
+                .filter(ra -> capability.map(c -> ra.getCapabilityClosure().contains(c)).orElse(true))
                 .map(ra -> {
                     var userName = ra.getUserName();
                     return userName.map(Subject::forUser).orElseGet(Subject::forAnySignedInUser);
@@ -221,9 +213,10 @@ public class AccessManagerImpl implements AccessManager {
     @Override
     public Collection<Resource> getResourcesAccessibleToSubject(Subject subject, Capability capability) {
         var userName = toUserName(subject);
-        var query = query(where(USER_NAME).is(userName).and(CAPABILITY_CLOSURE).is(capability.id()));
+        var query = query(where(USER_NAME).is(userName));
         return find(query)
                 .map(f -> objectMapper.convertValue(f, RoleAssignment.class))
+                .filter(ra -> ra.getCapabilityClosure().contains(capability))
                 .map(ra -> {
                     var projectId = ra.getProjectId();
                     if (projectId.isPresent()) {
