@@ -182,17 +182,9 @@ public class AccessManagerImpl implements AccessManager {
 
     @Override
     public boolean hasPermission(@Nonnull Subject subject, @Nonnull Resource resource, @Nonnull Capability capability) {
-        logger.info("Checking permission for subject {} and resource {} with capability: {}", subject, resource, capability);
-
-        var match = find(withUserOrAnyUserAndTarget(subject, resource))
+        return find(withUserOrAnyUserAndTarget(subject, resource))
                 .map(d -> objectMapper.convertValue(d, RoleAssignment.class))
                 .anyMatch(roleAssignment -> roleAssignment.getCapabilityClosure().contains(capability));
-
-//        var query = withUserOrAnyUserAndTarget(subject, resource)
-//                .addCriteria(where(ACTION_CLOSURE).is(capability.id()))
-//                .limit(1);
-//        return mongoTemplate.count(query, RoleAssignment.class) == 1;
-        return match;
     }
 
     @Override
