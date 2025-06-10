@@ -114,6 +114,32 @@ public class AccessManagerImpl implements AccessManager {
         }
     }
 
+    @Override
+    public void setProjectRoleAssignments(ProjectId projectId, ProjectRoleAssignments projectRoleAssignments) {
+        lock.writeLock().lock();
+        try {
+            // Remove existing assignments
+            var projectResource = ProjectResource.forProject(projectId);
+            getSubjectsWithAccessToResource(projectResource)
+                    .forEach(subject -> setAssignedRoles(subject, projectResource, Collections.emptySet()));
+
+            List<UserRoleAssignment> userRoleAssignments = projectRoleAssignments.userAssignments();
+            var byUserId = userRoleAssignments
+                    .stream()
+                    .collect(Collectors.groupingBy(UserRoleAssignment::userId));
+            byUserId.forEach((userId, assignments) -> {
+                var roleIds = assignments.stream().map(UserRoleAssignment::roleId).collect(Collectors.toSet());
+                setAssignedRoles(
+                        Subject.forUser(userId),
+                        projectResource,
+                        roleIds);
+
+            });
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
     private List<Capability> getCapabilityClosure(@Nullable ProjectId projectId,
                                                   @Nonnull Collection<RoleId> roleIds) {
         lock.readLock().lock();
