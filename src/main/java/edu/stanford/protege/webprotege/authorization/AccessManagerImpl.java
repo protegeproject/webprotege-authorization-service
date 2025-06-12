@@ -1,7 +1,9 @@
 package edu.stanford.protege.webprotege.authorization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.stanford.protege.webprotege.common.EventId;
 import edu.stanford.protege.webprotege.common.ProjectId;
+import edu.stanford.protege.webprotege.ipc.EventDispatcher;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +47,8 @@ public class AccessManagerImpl implements AccessManager {
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
+    private final EventDispatcher eventDispatcher;
+
     /**
      * Constructs an {@link AccessManager} that is backed by MongoDb.
      *
@@ -52,11 +56,12 @@ public class AccessManagerImpl implements AccessManager {
      */
     public AccessManagerImpl(ObjectMapper objectMapper,
                              MongoTemplate mongoTemplate,
-                             ProjectRoleDefinitionsManager projectRoleDefinitionsManager, RoleDefinitionsManager roleDefinitionsManager) {
+                             ProjectRoleDefinitionsManager projectRoleDefinitionsManager, RoleDefinitionsManager roleDefinitionsManager, EventDispatcher eventDispatcher) {
         this.objectMapper = objectMapper;
         this.mongoTemplate = mongoTemplate;
         this.projectRoleDefinitionsManager = projectRoleDefinitionsManager;
         this.roleDefinitionsManager = roleDefinitionsManager;
+        this.eventDispatcher = eventDispatcher;
     }
 
     /**
@@ -112,6 +117,10 @@ public class AccessManagerImpl implements AccessManager {
         } finally {
             lock.writeLock().unlock();
         }
+        resource.getProjectId()
+                .ifPresent(projectId -> {
+                    eventDispatcher.dispatchEvent(new PermissionsChangedEvent(EventId.generate(), projectId));
+                });
     }
 
     @Override
@@ -138,6 +147,7 @@ public class AccessManagerImpl implements AccessManager {
         } finally {
             lock.writeLock().unlock();
         }
+
     }
 
     private List<Capability> getCapabilityClosure(@Nullable ProjectId projectId,
@@ -328,6 +338,7 @@ public class AccessManagerImpl implements AccessManager {
         } finally {
             lock.writeLock().unlock();
         }
+        eventDispatcher.dispatchEvent(new PermissionsChangedEvent(EventId.generate(), projectId));
     }
 
     private void rebuildMatchingRoleAssignments(Document queryObject) {
