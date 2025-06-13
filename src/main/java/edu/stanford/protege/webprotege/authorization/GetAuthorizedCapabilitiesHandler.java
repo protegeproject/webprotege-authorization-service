@@ -17,15 +17,15 @@ import java.util.HashSet;
  * 2021-08-09
  */
 @WebProtegeHandler
-public class GetAuthorizedActionsHandler implements CommandHandler<GetAuthorizedCapabilitiesRequest, GetAuthorizedCapabilitiesResponse> {
-    private final static Logger logger = LoggerFactory.getLogger(GetAuthorizedActionsHandler.class);
+public class GetAuthorizedCapabilitiesHandler implements CommandHandler<GetAuthorizedCapabilitiesRequest, GetAuthorizedCapabilitiesResponse> {
+    private final static Logger logger = LoggerFactory.getLogger(GetAuthorizedCapabilitiesHandler.class);
 
     private final AccessManager accessManager;
     private final TokenValidator tokenValidator;
 
     private final BuiltInRoleOracle builtInRoleOracle;
 
-    public GetAuthorizedActionsHandler(AccessManager accessManager, TokenValidator tokenValidator, BuiltInRoleOracle builtInRoleOracle) {
+    public GetAuthorizedCapabilitiesHandler(AccessManager accessManager, TokenValidator tokenValidator, BuiltInRoleOracle builtInRoleOracle) {
         this.accessManager = accessManager;
         this.tokenValidator = tokenValidator;
         this.builtInRoleOracle = builtInRoleOracle;

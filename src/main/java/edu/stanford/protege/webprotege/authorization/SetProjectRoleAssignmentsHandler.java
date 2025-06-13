@@ -45,25 +45,8 @@ public class SetProjectRoleAssignmentsHandler implements AuthorizedCommandHandle
     }
 
     @Override
-    public Mono<SetProjectRoleAssignmentsResponse> handleRequest(SetProjectRoleAssignmentsRequest request, ExecutionContext executionContext) {
-        // Remove existing assignments
-        var projectResource = ProjectResource.forProject(request.projectId());
-        accessManager.getSubjectsWithAccessToResource(projectResource)
-                .forEach(subject -> accessManager.setAssignedRoles(subject, projectResource, Collections.emptySet()));
-
-
-        var projectAssignments = request.assignments();
-        var byUserId = projectAssignments.userAssignments()
-                .stream()
-                .collect(Collectors.groupingBy(UserRoleAssignment::userId));
-        byUserId.forEach((userId, assignments) -> {
-            var roleIds = assignments.stream().map(UserRoleAssignment::roleId).collect(Collectors.toSet());
-            accessManager.setAssignedRoles(
-                    Subject.forUser(userId),
-                    projectResource,
-                    roleIds);
-
-        });
+    public synchronized Mono<SetProjectRoleAssignmentsResponse> handleRequest(SetProjectRoleAssignmentsRequest request, ExecutionContext executionContext) {
+        accessManager.setProjectRoleAssignments(request.projectId(), request.assignments());
         return Mono.just(new SetProjectRoleAssignmentsResponse(request.assignments()));
     }
 }

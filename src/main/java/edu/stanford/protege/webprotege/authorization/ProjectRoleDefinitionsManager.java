@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 @Component
@@ -16,6 +18,8 @@ public class ProjectRoleDefinitionsManager {
     private static final Logger logger = LoggerFactory.getLogger(ProjectRoleDefinitionsManager.class);
 
     private final ProjectRoleDefinitionsRepository repository;
+
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     public ProjectRoleDefinitionsManager(ProjectRoleDefinitionsRepository repository) {
         this.repository = repository;
@@ -34,8 +38,13 @@ public class ProjectRoleDefinitionsManager {
                 throw new IllegalArgumentException("Role definition is not a project role: " + roleDefinition);
             }
         }
-        var record = ProjectRoleDefinitionsRecord.get(projectId, roleDefinitions);
-        repository.saveProjectRoleDefinitions(record);
+        lock.writeLock().lock();
+        try {
+            var record = ProjectRoleDefinitionsRecord.get(projectId, roleDefinitions);
+            repository.saveProjectRoleDefinitions(record);
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     /**
@@ -44,7 +53,12 @@ public class ProjectRoleDefinitionsManager {
      * @param projectId The project.
      */
     public void clearProjectRoleDefinitions(@Nonnull ProjectId projectId) {
-        repository.clearProjectRoleDefinitions(projectId);
+        lock.writeLock().lock();
+        try {
+            repository.clearProjectRoleDefinitions(projectId);
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     /**
@@ -59,12 +73,17 @@ public class ProjectRoleDefinitionsManager {
         if(projectId == null) {
             return getBuiltInProjectRoleDefinitions();
         }
-        var record = repository.getProjectRoleDefinitions(projectId);
-        if(record.isEmpty()) {
-            return getBuiltInProjectRoleDefinitions();
-        }
-        else {
-            return List.copyOf(record.get().roleDefinitions());
+        lock.readLock().lock();
+        try {
+            var record = repository.getProjectRoleDefinitions(projectId);
+            if(record.isEmpty()) {
+                return getBuiltInProjectRoleDefinitions();
+            }
+            else {
+                return List.copyOf(record.get().roleDefinitions());
+            }
+        } finally {
+            lock.readLock().unlock();
         }
     }
 
@@ -78,10 +97,15 @@ public class ProjectRoleDefinitionsManager {
      * @throws IllegalStateException if a cycle is detected in the role hierarchy.
      */
     public Set<RoleDefinition> getProjectRoleClosure(@Nullable ProjectId projectId, Collection<RoleId> roleIds) {
-        return roleIds.stream()
-                .map(roleId -> getProjectRoleClosure(projectId, roleId))
-                .flatMap(Set::stream)
-                .collect(Collectors.toSet());
+        lock.readLock().lock();
+        try {
+            return roleIds.stream()
+                    .map(roleId -> getProjectRoleClosure(projectId, roleId))
+                    .flatMap(Set::stream)
+                    .collect(Collectors.toSet());
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /**
@@ -94,30 +118,35 @@ public class ProjectRoleDefinitionsManager {
      */
     @Nonnull
     public Set<RoleDefinition> getProjectRoleClosure(@Nullable ProjectId projectId, @Nonnull RoleId roleId) {
-        var projectRoleDefinitions = getEffectiveProjectRoleDefinitions(projectId);
-        var roleDefinitionsMap = new HashMap<RoleId, RoleDefinition>();
-        for(var roleDefinition : projectRoleDefinitions) {
-            roleDefinitionsMap.put(roleDefinition.roleId(), roleDefinition);
-        }
-
-        var result = new HashSet<RoleDefinition>();
-        var toProcess = new ArrayDeque<RoleId>();
-        var processing = new HashSet<RoleId>();
-        toProcess.add(roleId);
-
-        while (!toProcess.isEmpty()) {
-            var currentRoleId = toProcess.removeFirst();
-            if (!processing.add(currentRoleId)) {
-                // We've seen this role before while processing - we have a cycle.  This is allowed but it's probably
-                // a mistake.  Log the cycle.
-                logRoleHierarchyCycle(currentRoleId, toProcess, roleDefinitionsMap);
+        lock.readLock().lock();
+        try {
+            var projectRoleDefinitions = getEffectiveProjectRoleDefinitions(projectId);
+            var roleDefinitionsMap = new HashMap<RoleId, RoleDefinition>();
+            for(var roleDefinition : projectRoleDefinitions) {
+                roleDefinitionsMap.put(roleDefinition.roleId(), roleDefinition);
             }
-            var currentRole = roleDefinitionsMap.get(currentRoleId);
-            if (currentRole != null && result.add(currentRole)) {
-                toProcess.addAll(currentRole.parentRoles());
+
+            var result = new HashSet<RoleDefinition>();
+            var toProcess = new ArrayDeque<RoleId>();
+            var processing = new HashSet<RoleId>();
+            toProcess.add(roleId);
+
+            while (!toProcess.isEmpty()) {
+                var currentRoleId = toProcess.removeFirst();
+                if (!processing.add(currentRoleId)) {
+                    // We've seen this role before while processing - we have a cycle.  This is allowed but it's probably
+                    // a mistake.  Log the cycle.
+                    logRoleHierarchyCycle(currentRoleId, toProcess, roleDefinitionsMap);
+                }
+                var currentRole = roleDefinitionsMap.get(currentRoleId);
+                if (currentRole != null && result.add(currentRole)) {
+                    toProcess.addAll(currentRole.parentRoles());
+                }
             }
+            return result;
+        } finally {
+            lock.readLock().unlock();
         }
-        return result;
     }
 
     private static void logRoleHierarchyCycle(RoleId currentRoleId, ArrayDeque<RoleId> toProcess, HashMap<RoleId, RoleDefinition> roleDefinitionsMap) {
