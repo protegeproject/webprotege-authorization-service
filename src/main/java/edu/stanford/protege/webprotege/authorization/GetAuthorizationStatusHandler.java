@@ -20,7 +20,7 @@ import java.util.Set;
  */
 @WebProtegeHandler
 public class GetAuthorizationStatusHandler implements CommandHandler<GetAuthorizationStatusRequest, GetAuthorizationStatusResponse> {
-    private final static Logger logger = LoggerFactory.getLogger(GetAuthorizedCapabilitiesHandler.class);
+    private final static Logger logger = LoggerFactory.getLogger(GetAuthorizationStatusHandler.class);
 
     private final AccessManager accessManager;
 
