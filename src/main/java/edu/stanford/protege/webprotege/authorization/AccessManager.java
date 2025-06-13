@@ -36,6 +36,8 @@ public interface AccessManager {
                           @Nonnull Resource resource,
                           @Nonnull Collection<RoleId> roleIds);
 
+    void setProjectRoleAssignments(ProjectId projectId, ProjectRoleAssignments projectRoleAssignments);
+
     /**
      * Gets the role closure for the specified subject and resource pair.
      * @param subject The subject.
