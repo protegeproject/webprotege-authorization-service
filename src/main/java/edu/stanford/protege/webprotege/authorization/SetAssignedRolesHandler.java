@@ -34,7 +34,6 @@ public class SetAssignedRolesHandler implements CommandHandler<SetAssignedRolesR
 
     @Override
     public Mono<SetAssignedRolesResponse> handleRequest(SetAssignedRolesRequest request, ExecutionContext executionContext) {
-        System.out.println("Handling SetAssignedRolesRequest " + request);
         accessManager.setAssignedRoles(request.subject(),
                                        request.resource(),
                                        request.roles());
