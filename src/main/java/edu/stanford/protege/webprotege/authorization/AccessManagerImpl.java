@@ -5,6 +5,7 @@ import edu.stanford.protege.webprotege.common.EventId;
 import edu.stanford.protege.webprotege.common.ProjectId;
 import edu.stanford.protege.webprotege.ipc.EventDispatcher;
 import org.bson.Document;
+import org.keycloak.common.VerificationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
@@ -52,21 +53,29 @@ public class AccessManagerImpl implements AccessManager {
 
     private final EventDispatcher eventDispatcher;
 
+    private final TokenValidator tokenValidator;
+
+    private final BuiltInRoleOracle builtInRoleOracle;
+
     /**
      * Constructs an {@link AccessManager} that is backed by MongoDb.
      *
-     * @param mongoTemplate A {@link MongoTemplate} that is used to access MongoDb.
+     * @param mongoTemplate     A {@link MongoTemplate} that is used to access MongoDb.
+     * @param tokenValidator
+     * @param builtInRoleOracle
      */
     public AccessManagerImpl(ObjectMapper objectMapper,
                              MongoTemplate mongoTemplate,
                              ProjectRoleDefinitionsManager projectRoleDefinitionsManager,
                              RoleDefinitionsManager roleDefinitionsManager,
-                             EventDispatcher eventDispatcher) {
+                             EventDispatcher eventDispatcher, TokenValidator tokenValidator, BuiltInRoleOracle builtInRoleOracle) {
         this.objectMapper = objectMapper;
         this.mongoTemplate = mongoTemplate;
         this.projectRoleDefinitionsManager = projectRoleDefinitionsManager;
         this.roleDefinitionsManager = roleDefinitionsManager;
         this.eventDispatcher = eventDispatcher;
+        this.tokenValidator = tokenValidator;
+        this.builtInRoleOracle = builtInRoleOracle;
     }
 
     /**
@@ -247,14 +256,31 @@ public class AccessManagerImpl implements AccessManager {
     }
 
     @Override
-    public boolean hasPermission(@Nonnull Subject subject, @Nonnull Resource resource, @Nonnull Capability capability) {
+    public boolean hasPermission(@Nonnull Subject subject, @Nonnull Resource resource, @Nonnull Capability capability, String jwt) {
         logger.info("Checking permission for subject {} and resource {} with capability: {}", subject, resource, capability);
 
         lock.readLock().lock();
         try {
-            return find(withUserOrAnyUserAndTarget(subject, resource))
+            List<Capability> capabilities = new ArrayList<>(find(withUserOrAnyUserAndTarget(subject, resource))
                     .map(d -> objectMapper.convertValue(d, RoleAssignment.class))
-                    .anyMatch(roleAssignment -> roleAssignment.getCapabilityClosure().contains(capability));
+                    .flatMap(roleAssignment -> roleAssignment.getCapabilityClosure().stream())
+                    .toList());
+
+            if (jwt != null && !jwt.isEmpty()) {
+                try {
+                    List<RoleId> roleIds = tokenValidator.extractClaimsWithoutVerification(jwt).stream()
+                            .map(RoleId::new)
+                            .toList();
+                    capabilities.addAll(builtInRoleOracle.getCapabilitiesAssociatedToRoles(roleIds));
+                } catch (VerificationException e) {
+                    logger.error("Error getting token claims", e);
+                    throw new RuntimeException(e);
+                }
+            }
+
+
+            return capabilities.contains(capability);
+
         } finally {
             lock.readLock().unlock();
         }
@@ -275,7 +301,7 @@ public class AccessManagerImpl implements AccessManager {
         try {
             var projectId = toProjectIdString(resource);
             var query = query(where(PROJECT_ID).is(projectId));
-            capability.ifPresent(a -> query.addCriteria(where(CAPABILITY_CLOSURE+".id").in(a.id())));
+            capability.ifPresent(a -> query.addCriteria(where(CAPABILITY_CLOSURE + ".id").in(a.id())));
             return find(query)
                     .map(f -> objectMapper.convertValue(f, RoleAssignment.class))
                     .map(ra -> {
@@ -294,7 +320,7 @@ public class AccessManagerImpl implements AccessManager {
         try {
             var userName = toUserName(subject);
             logger.info("Trying to fetch resources {} and capability {}", userName, capability.id());
-        var query = query(where(USER_NAME).is(userName).and(CAPABILITY_CLOSURE+".id").is(capability.id()));
+            var query = query(where(USER_NAME).is(userName).and(CAPABILITY_CLOSURE + ".id").is(capability.id()));
             return find(query)
                     .map(f -> objectMapper.convertValue(f, RoleAssignment.class))
                     .map(ra -> {
@@ -330,7 +356,7 @@ public class AccessManagerImpl implements AccessManager {
     public void rebuild() {
         lock.writeLock().lock();
         try {
-            logger.info("Rebuilding permissions" );
+            logger.info("Rebuilding permissions");
             var queryObject = new Query().getQueryObject();
             rebuildMatchingRoleAssignments(queryObject);
         } finally {
@@ -343,7 +369,7 @@ public class AccessManagerImpl implements AccessManager {
     public void rebuild(ProjectId projectId) {
         lock.writeLock().lock();
         try {
-            logger.info("Rebuilding permissions for project: {}" , projectId);
+            logger.info("Rebuilding permissions for project: {}", projectId);
             var criteria = where(PROJECT_ID).is(projectId.value());
             var queryObject = new Query(criteria).getQueryObject();
             rebuildMatchingRoleAssignments(queryObject);
@@ -357,7 +383,7 @@ public class AccessManagerImpl implements AccessManager {
         var collection = mongoTemplate.getCollection(COLLECTION_NAME);
         collection.find(queryObject)
                 .forEach(roleAssignmentDoc -> {
-                    final var roleAssignmentId = roleAssignmentDoc.get("_id" );
+                    final var roleAssignmentId = roleAssignmentDoc.get("_id");
                     var roleAssignment = objectMapper.convertValue(roleAssignmentDoc, RoleAssignment.class);
 
                     // For each role assignment we compute the role closure and then
@@ -385,8 +411,8 @@ public class AccessManagerImpl implements AccessManager {
                             sortedCapabilityClosure);
 
                     var updatedRoleAssignmentDoc = objectMapper.convertValue(updatedRoleAssignment, Document.class);
-                    updatedRoleAssignmentDoc.put("_id" , roleAssignmentId);
-                    collection.replaceOne(new Document("_id" , roleAssignmentId), updatedRoleAssignmentDoc);
+                    updatedRoleAssignmentDoc.put("_id", roleAssignmentId);
+                    collection.replaceOne(new Document("_id", roleAssignmentId), updatedRoleAssignmentDoc);
                 });
     }
 

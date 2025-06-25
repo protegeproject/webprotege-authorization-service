@@ -47,26 +47,11 @@ public class GetAuthorizationStatusHandler implements CommandHandler<GetAuthoriz
 
     @Override
     public Mono<GetAuthorizationStatusResponse> handleRequest(GetAuthorizationStatusRequest request, ExecutionContext executionContext) {
-        var hasPermission = false;
-        if(request.resource().isApplication()) {
-            List<RoleId> roleIds;
-            try {
-                roleIds = tokenValidator.extractClaimsWithoutVerification(executionContext.jwt()).stream()
-                        .map(RoleId::new)
-                        .toList();
-                Set<Capability> capabilities  = new HashSet<>(builtInRoleOracle.getCapabilitiesAssociatedToRoles(roleIds));
-                hasPermission = capabilities.contains(request.capability());
+        var hasPermission = accessManager.hasPermission(request.subject(),
+                request.resource(),
+                request.capability(),
+                executionContext.jwt());
 
-            } catch (VerificationException e) {
-                logger.error("Error getting token claims", e);
-                throw new RuntimeException(e);
-            }
-
-        }else {
-            hasPermission = accessManager.hasPermission(request.subject(),
-                    request.resource(),
-                    request.capability());
-        }
         if(hasPermission) {
             return Mono.just(new GetAuthorizationStatusResponse(request.resource(),
                     request.subject(),
