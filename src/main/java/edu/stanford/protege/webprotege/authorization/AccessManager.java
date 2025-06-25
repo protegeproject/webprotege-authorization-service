@@ -69,7 +69,8 @@ public interface AccessManager {
      */
     boolean hasPermission(@Nonnull Subject subject,
                           @Nonnull Resource resource,
-                          @Nonnull Capability capability);
+                          @Nonnull Capability capability,
+                          String jwt);
 
     Collection<Subject> getSubjectsWithAccessToResource(Resource resource);
 
