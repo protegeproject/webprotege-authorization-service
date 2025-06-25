@@ -24,25 +24,11 @@ public class AuthorizationCommandsService {
     }
     // TODO:  Update this when Alex has committed the code
     public GetAuthorizationStatusResponse handleAuthorizationStatusCommand(GetAuthorizationStatusRequest request, ExecutionContext executionContext) {
-        var hasPermission = false;
-        if(request.resource().isApplication()) {
-            List<RoleId> roleIds;
-            try {
-                roleIds = tokenValidator.extractClaimsWithoutVerification(executionContext.jwt()).stream()
-                        .map(RoleId::new)
-                        .toList();
-                Set<Capability> capabilities  = new HashSet<>(builtInRoleOracle.getCapabilitiesAssociatedToRoles(roleIds));
-                hasPermission = capabilities.contains(request.capability());
-
-            } catch (VerificationException e) {
-                throw new RuntimeException(e);
-            }
-
-        }else {
-            hasPermission = accessManager.hasPermission(request.subject(),
+        var hasPermission = accessManager.hasPermission(request.subject(),
                     request.resource(),
-                    request.capability());
-        }
+                    request.capability(),
+                executionContext.jwt());
+
         if(hasPermission) {
             return new GetAuthorizationStatusResponse(request.resource(),
                     request.subject(),
