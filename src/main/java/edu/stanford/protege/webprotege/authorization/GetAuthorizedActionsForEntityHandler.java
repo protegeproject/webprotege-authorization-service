@@ -10,6 +10,9 @@ import reactor.core.publisher.Mono;
 
 import javax.annotation.Nonnull;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 /**
@@ -69,24 +72,27 @@ public class GetAuthorizedActionsForEntityHandler implements CommandHandler<GetA
 
         Map<String, List<CompositeRootCriteria>> criteriaMap = extractUserPermisionCriteria(capabilities);
 
-        return Mono.fromFuture(getMatchingCriteriaExecutor.execute(
-                        new GetMatchingCriteriaRequest(criteriaMap,
-                                resource.getProjectId().get(),
-                                request.entityIri()),
-                        executionContext))
-                .map(matchResp -> {
-                    var filteredCapabilities = capabilities.stream()
-                            .filter(capability -> {
-                                if (capability instanceof ContextAwareCapability cap) {
-                                    return matchResp.matchingKeys().contains(cap.id());
-                                }
-                                return true;
-                            })
-                            .collect(Collectors.toSet());
-                    return new GetAuthorizedCapabilitiesForEntityResponse(
-                            ImmutableSet.copyOf(filteredCapabilities)
-                    );
-                });
+        try {
+            GetMatchingCriteriaResponse matchResp = getMatchingCriteriaExecutor.execute(
+                    new GetMatchingCriteriaRequest(criteriaMap,
+                            resource.getProjectId().get(),
+                            request.entityIri()),
+                    executionContext).get(5, TimeUnit.SECONDS);
+            var filteredCapabilities = capabilities.stream()
+                    .filter(capability -> {
+                        if (capability instanceof ContextAwareCapability cap) {
+                            return matchResp.matchingKeys().contains(cap.id());
+                        }
+                        return true;
+                    })
+                    .collect(Collectors.toSet());
+            return Mono.just(new GetAuthorizedCapabilitiesForEntityResponse(
+                    ImmutableSet.copyOf(filteredCapabilities))
+            );
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            logger.error("Error on fetching data", e);
+            throw new RuntimeException(e);
+        }
     }
 
     private Map<String, List<CompositeRootCriteria>> extractUserPermisionCriteria(Set<Capability> capabilities) {
