@@ -304,6 +304,7 @@ public class AccessManagerImpl implements AccessManager {
             capability.ifPresent(a -> query.addCriteria(where(CAPABILITY_CLOSURE + ".id").in(a.id())));
             return find(query)
                     .map(f -> objectMapper.convertValue(f, RoleAssignment.class))
+                    .filter(ra -> capability.map(cap -> ra.getCapabilityClosure().contains(cap)).orElse(true))
                     .map(ra -> {
                         var userName = ra.getUserName();
                         return userName.map(Subject::forUser).orElseGet(Subject::forAnySignedInUser);
@@ -323,6 +324,7 @@ public class AccessManagerImpl implements AccessManager {
             var query = query(where(USER_NAME).is(userName).and(CAPABILITY_CLOSURE + ".id").is(capability.id()));
             return find(query)
                     .map(f -> objectMapper.convertValue(f, RoleAssignment.class))
+                    .filter(ra -> ra.getCapabilityClosure().contains(capability))
                     .map(ra -> {
                         var projectId = ra.getProjectId();
                         if (projectId.isPresent()) {

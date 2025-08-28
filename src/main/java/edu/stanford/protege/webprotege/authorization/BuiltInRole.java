@@ -88,6 +88,7 @@ public enum BuiltInRole {
             CREATE_CLASS,
             DELETE_CLASS,
             MERGE_ENTITIES,
+            MOVE_ENTITY,
             CREATE_PROPERTY,
             DELETE_PROPERTY,
             CREATE_INDIVIDUAL,
@@ -106,7 +107,9 @@ public enum BuiltInRole {
             CREATE_PROPERTY,
             CREATE_INDIVIDUAL,
             CREATE_DATATYPE,
-            REVERT_CHANGES),
+            REVERT_CHANGES,
+            BULK_EDIT_ANNOTATIONS),
+
     LAYOUT_EDITOR(PROJECT_ROLE,
             "" ,
             ADD_OR_REMOVE_PERSPECTIVE,
