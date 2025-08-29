@@ -77,7 +77,7 @@ public class GetAuthorizedActionsForEntityHandler implements CommandHandler<GetA
                     new GetMatchingCriteriaRequest(criteriaMap,
                             resource.getProjectId().get(),
                             request.entityIri()),
-                    executionContext).get(5, TimeUnit.SECONDS);
+                    executionContext).get(40, TimeUnit.SECONDS);
             var filteredCapabilities = capabilities.stream()
                     .filter(capability -> {
                         if (capability instanceof ContextAwareCapability cap) {
