@@ -49,8 +49,6 @@ public class AccessManagerImpl implements AccessManager {
 
     private final RoleDefinitionsManager roleDefinitionsManager;
 
-    private final ReadWriteLock lock = new ReentrantReadWriteLock();
-
     private final EventDispatcher eventDispatcher;
 
     private final TokenValidator tokenValidator;
@@ -100,82 +98,71 @@ public class AccessManagerImpl implements AccessManager {
     public void setAssignedRoles(@Nonnull Subject subject,
                                  @Nonnull Resource resource,
                                  @Nonnull Collection<RoleId> roleIds) {
-        lock.writeLock().lock();
-        try {
-            var userName = toUserName(subject);
-            var projectId = resource.getProjectId();
 
-            var roleDefinitionsClosure = new HashSet<RoleDefinition>();
+        var userName = toUserName(subject);
+        var projectId = resource.getProjectId();
 
-            // For each assigned role, we get its closure
-            for (var roleId : roleIds) {
-                var defs = roleDefinitionsManager.getRoleDefinitionClosure(roleId, projectId.orElse(null));
-                roleDefinitionsClosure.addAll(defs);
-            }
+        var roleDefinitionsClosure = new HashSet<RoleDefinition>();
 
-            // Next we get the capabilities of the closure
-            var roleCapabilitiesClosure = roleDefinitionsClosure.stream()
-                    .map(RoleDefinition::roleCapabilities)
-                    .flatMap(Collection::stream)
-                    .collect(Collectors.toSet());
-
-            var assignedRoles = roleIds.stream().map(RoleId::id).toList();
-            var roleIdClosure = roleDefinitionsClosure.stream().map(RoleDefinition::roleId).map(RoleId::id).toList();
-            var assignment = new RoleAssignment(userName,
-                    projectId.map(ProjectId::id).orElse(null),
-                    assignedRoles,
-                    roleIdClosure,
-                    List.copyOf(roleCapabilitiesClosure));
-            mongoTemplate.remove(withUserAndTarget(subject, resource), RoleAssignment.class);
-            var doc = objectMapper.convertValue(assignment, Document.class);
-            mongoTemplate.getCollection(COLLECTION_NAME).insertOne(doc);
-        } finally {
-            lock.writeLock().unlock();
+        // For each assigned role, we get its closure
+        for (var roleId : roleIds) {
+            var defs = roleDefinitionsManager.getRoleDefinitionClosure(roleId, projectId.orElse(null));
+            roleDefinitionsClosure.addAll(defs);
         }
+
+        // Next we get the capabilities of the closure
+        var roleCapabilitiesClosure = roleDefinitionsClosure.stream()
+                .map(RoleDefinition::roleCapabilities)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+
+        var assignedRoles = roleIds.stream().map(RoleId::id).toList();
+        var roleIdClosure = roleDefinitionsClosure.stream().map(RoleDefinition::roleId).map(RoleId::id).toList();
+        var assignment = new RoleAssignment(userName,
+                projectId.map(ProjectId::id).orElse(null),
+                assignedRoles,
+                roleIdClosure,
+                List.copyOf(roleCapabilitiesClosure));
+        mongoTemplate.remove(withUserAndTarget(subject, resource), RoleAssignment.class);
+        var doc = objectMapper.convertValue(assignment, Document.class);
+        mongoTemplate.getCollection(COLLECTION_NAME).insertOne(doc);
+
         resource.getProjectId()
-                .ifPresent(projectId -> {
-                    eventDispatcher.dispatchEvent(new PermissionsChangedEvent(EventId.generate(), projectId));
+                .ifPresent(prj -> {
+                    eventDispatcher.dispatchEvent(new PermissionsChangedEvent(EventId.generate(), prj));
                 });
     }
 
     @Override
     public void setProjectRoleAssignments(ProjectId projectId, ProjectRoleAssignments projectRoleAssignments) {
-        lock.writeLock().lock();
-        try {
-            // Remove existing assignments
-            var projectResource = ProjectResource.forProject(projectId);
-            getSubjectsWithAccessToResource(projectResource)
-                    .forEach(subject -> setAssignedRoles(subject, projectResource, Collections.emptySet()));
 
-            List<UserRoleAssignment> userRoleAssignments = projectRoleAssignments.userAssignments();
-            var byUserId = userRoleAssignments
-                    .stream()
-                    .collect(Collectors.groupingBy(UserRoleAssignment::userId));
-            byUserId.forEach((userId, assignments) -> {
-                var roleIds = assignments.stream().map(UserRoleAssignment::roleId).collect(Collectors.toSet());
-                setAssignedRoles(
-                        Subject.forUser(userId),
-                        projectResource,
-                        roleIds);
+        // Remove existing assignments
+        var projectResource = ProjectResource.forProject(projectId);
+        getSubjectsWithAccessToResource(projectResource)
+                .forEach(subject -> setAssignedRoles(subject, projectResource, Collections.emptySet()));
 
-            });
-        } finally {
-            lock.writeLock().unlock();
-        }
+        List<UserRoleAssignment> userRoleAssignments = projectRoleAssignments.userAssignments();
+        var byUserId = userRoleAssignments
+                .stream()
+                .collect(Collectors.groupingBy(UserRoleAssignment::userId));
+        byUserId.forEach((userId, assignments) -> {
+            var roleIds = assignments.stream().map(UserRoleAssignment::roleId).collect(Collectors.toSet());
+            setAssignedRoles(
+                    Subject.forUser(userId),
+                    projectResource,
+                    roleIds);
 
+        });
     }
 
     private List<Capability> getCapabilityClosure(@Nullable ProjectId projectId,
                                                   @Nonnull Collection<RoleId> roleIds) {
-        lock.readLock().lock();
-        try {
-            return roleIds.stream()
-                    .flatMap(id -> projectRoleDefinitionsManager.getProjectRoleClosure(projectId, id).stream())
-                    .flatMap(r -> r.roleCapabilities().stream())
-                    .collect(toList());
-        } finally {
-            lock.readLock().unlock();
-        }
+
+        return roleIds.stream()
+                .flatMap(id -> projectRoleDefinitionsManager.getProjectRoleClosure(projectId, id).stream())
+                .flatMap(r -> r.roleCapabilities().stream())
+                .collect(toList());
+
     }
 
     private Query withUserAndTarget(Subject subject, Resource resource) {
@@ -188,19 +175,16 @@ public class AccessManagerImpl implements AccessManager {
     @Nonnull
     @Override
     public Collection<RoleId> getAssignedRoles(@Nonnull Subject subject, @Nonnull Resource resource) {
-        lock.readLock().lock();
-        try {
-            var query = withUserAndTarget(subject, resource);
-            var stream = find(query);
-            return stream
-                    .map(f -> objectMapper.convertValue(f, RoleAssignment.class))
-                    .flatMap(ra -> ra.getAssignedRoles().stream())
-                    .map(RoleId::new)
-                    .distinct()
-                    .collect(toList());
-        } finally {
-            lock.readLock().unlock();
-        }
+
+        var query = withUserAndTarget(subject, resource);
+        var stream = find(query);
+        return stream
+                .map(f -> objectMapper.convertValue(f, RoleAssignment.class))
+                .flatMap(ra -> ra.getAssignedRoles().stream())
+                .map(RoleId::new)
+                .distinct()
+                .collect(toList());
+
     }
 
     private Stream<Document> find(Query query) {
@@ -226,64 +210,55 @@ public class AccessManagerImpl implements AccessManager {
     @Nonnull
     @Override
     public Collection<RoleId> getRoleClosure(@Nonnull Subject subject, @Nonnull Resource resource) {
-        lock.readLock().lock();
-        try {
-            var query = withUserOrAnyUserAndTarget(subject, resource);
-            return find(query)
-                    .map(f -> objectMapper.convertValue(f, RoleAssignment.class))
-                    .flatMap(ra -> ra.getRoleClosure().stream())
-                    .distinct()
-                    .map(RoleId::new)
-                    .collect(toList());
-        } finally {
-            lock.readLock().unlock();
-        }
+
+        var query = withUserOrAnyUserAndTarget(subject, resource);
+        return find(query)
+                .map(f -> objectMapper.convertValue(f, RoleAssignment.class))
+                .flatMap(ra -> ra.getRoleClosure().stream())
+                .distinct()
+                .map(RoleId::new)
+                .collect(toList());
+
     }
 
     @Nonnull
     @Override
     public Set<Capability> getCapabilityClosure(@Nonnull Subject subject, @Nonnull Resource resource) {
-        lock.readLock().lock();
-        try {
-            var query = withUserOrAnyUserAndTarget(subject, resource);
-            return find(query)
-                    .map(f -> objectMapper.convertValue(f, RoleAssignment.class))
-                    .flatMap(ra -> ra.getCapabilityClosure().stream())
-                    .collect(Collectors.toCollection(LinkedHashSet::new));
-        } finally {
-            lock.readLock().unlock();
-        }
+
+        var query = withUserOrAnyUserAndTarget(subject, resource);
+        return find(query)
+                .map(f -> objectMapper.convertValue(f, RoleAssignment.class))
+                .flatMap(ra -> ra.getCapabilityClosure().stream())
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
     }
 
     @Override
     public boolean hasPermission(@Nonnull Subject subject, @Nonnull Resource resource, @Nonnull Capability capability, String jwt) {
         logger.info("Checking permission for subject {} and resource {} with capability: {}", subject, resource, capability);
 
-        lock.readLock().lock();
-        try {
-            List<Capability> capabilities = new ArrayList<>(find(withUserOrAnyUserAndTarget(subject, resource))
-                    .map(d -> objectMapper.convertValue(d, RoleAssignment.class))
-                    .flatMap(roleAssignment -> roleAssignment.getCapabilityClosure().stream())
-                    .toList());
 
-            if (jwt != null && !jwt.isEmpty()) {
-                try {
-                    List<RoleId> roleIds = tokenValidator.extractClaimsWithoutVerification(jwt).stream()
-                            .map(RoleId::new)
-                            .toList();
-                    capabilities.addAll(builtInRoleOracle.getCapabilitiesAssociatedToRoles(roleIds));
-                } catch (VerificationException e) {
-                    logger.error("Error getting token claims", e);
-                    throw new RuntimeException(e);
-                }
+        List<Capability> capabilities = new ArrayList<>(find(withUserOrAnyUserAndTarget(subject, resource))
+                .map(d -> objectMapper.convertValue(d, RoleAssignment.class))
+                .flatMap(roleAssignment -> roleAssignment.getCapabilityClosure().stream())
+                .toList());
+
+        if (jwt != null && !jwt.isEmpty()) {
+            try {
+                List<RoleId> roleIds = tokenValidator.extractClaimsWithoutVerification(jwt).stream()
+                        .map(RoleId::new)
+                        .toList();
+                capabilities.addAll(builtInRoleOracle.getCapabilitiesAssociatedToRoles(roleIds));
+            } catch (VerificationException e) {
+                logger.error("Error getting token claims", e);
+                throw new RuntimeException(e);
             }
-
-
-            return capabilities.contains(capability);
-
-        } finally {
-            lock.readLock().unlock();
         }
+
+
+        return capabilities.contains(capability);
+
+
     }
 
     @Override
@@ -297,87 +272,72 @@ public class AccessManagerImpl implements AccessManager {
     }
 
     private Collection<Subject> getSubjectsWithAccessToResource(Resource resource, Optional<Capability> capability) {
-        lock.readLock().lock();
-        try {
-            var projectId = toProjectIdString(resource);
-            var query = query(where(PROJECT_ID).is(projectId));
-            capability.ifPresent(a -> query.addCriteria(where(CAPABILITY_CLOSURE + ".id").in(a.id())));
-            return find(query)
-                    .map(f -> objectMapper.convertValue(f, RoleAssignment.class))
-                    .filter(ra -> capability.map(cap -> ra.getCapabilityClosure().contains(cap)).orElse(true))
-                    .map(ra -> {
-                        var userName = ra.getUserName();
-                        return userName.map(Subject::forUser).orElseGet(Subject::forAnySignedInUser);
-                    })
-                    .collect(toList());
-        } finally {
-            lock.readLock().unlock();
-        }
+
+        var projectId = toProjectIdString(resource);
+        var query = query(where(PROJECT_ID).is(projectId));
+        capability.ifPresent(a -> query.addCriteria(where(CAPABILITY_CLOSURE + ".id").in(a.id())));
+        return find(query)
+                .map(f -> objectMapper.convertValue(f, RoleAssignment.class))
+                .filter(ra -> capability.map(cap -> ra.getCapabilityClosure().contains(cap)).orElse(true))
+                .map(ra -> {
+                    var userName = ra.getUserName();
+                    return userName.map(Subject::forUser).orElseGet(Subject::forAnySignedInUser);
+                })
+                .collect(toList());
+
     }
 
     @Override
     public Collection<Resource> getResourcesAccessibleToSubject(Subject subject, Capability capability) {
-        lock.readLock().lock();
-        try {
-            var userName = toUserName(subject);
-            logger.info("Trying to fetch resources {} and capability {}", userName, capability.id());
-            var query = query(where(USER_NAME).is(userName).and(CAPABILITY_CLOSURE + ".id").is(capability.id()));
-            return find(query)
-                    .map(f -> objectMapper.convertValue(f, RoleAssignment.class))
-                    .filter(ra -> ra.getCapabilityClosure().contains(capability))
-                    .map(ra -> {
-                        var projectId = ra.getProjectId();
-                        if (projectId.isPresent()) {
-                            return new ProjectResource(new ProjectId(projectId.get()));
-                        } else {
-                            return ApplicationResource.get();
-                        }
-                    })
-                    .collect(toList());
-        } finally {
-            lock.readLock().unlock();
-        }
+
+        var userName = toUserName(subject);
+        logger.info("Trying to fetch resources {} and capability {}", userName, capability.id());
+        var query = query(where(USER_NAME).is(userName).and(CAPABILITY_CLOSURE + ".id").is(capability.id()));
+        return find(query)
+                .map(f -> objectMapper.convertValue(f, RoleAssignment.class))
+                .filter(ra -> ra.getCapabilityClosure().contains(capability))
+                .map(ra -> {
+                    var projectId = ra.getProjectId();
+                    if (projectId.isPresent()) {
+                        return new ProjectResource(new ProjectId(projectId.get()));
+                    } else {
+                        return ApplicationResource.get();
+                    }
+                })
+                .collect(toList());
+
     }
 
     @Cacheable(value = ROLE_ASSIGNMENTS_CACHE, key = "#projectId.value()", unless = "#result.isEmpty()")
     @Override
     public List<RoleAssignment> getRoleAssignments(ProjectId projectId) {
-        lock.readLock().lock();
-        try {
-            var query = query(where(PROJECT_ID).is(projectId.value()));
-            return find(query)
-                    .map(f -> objectMapper.convertValue(f, RoleAssignment.class))
-                    .toList();
-        } finally {
-            lock.readLock().unlock();
-        }
+
+        var query = query(where(PROJECT_ID).is(projectId.value()));
+        return find(query)
+                .map(f -> objectMapper.convertValue(f, RoleAssignment.class))
+                .toList();
+
     }
 
     @CacheEvict(value = ROLE_ASSIGNMENTS_CACHE, allEntries = true)
     @Override
     public void rebuild() {
-        lock.writeLock().lock();
-        try {
-            logger.info("Rebuilding permissions");
-            var queryObject = new Query().getQueryObject();
-            rebuildMatchingRoleAssignments(queryObject);
-        } finally {
-            lock.writeLock().unlock();
-        }
+
+        logger.info("Rebuilding permissions");
+        var queryObject = new Query().getQueryObject();
+        rebuildMatchingRoleAssignments(queryObject);
+
     }
 
     @CacheEvict(value = ROLE_ASSIGNMENTS_CACHE, key = "#projectId.value()")
     @Override
     public void rebuild(ProjectId projectId) {
-        lock.writeLock().lock();
-        try {
-            logger.info("Rebuilding permissions for project: {}", projectId);
-            var criteria = where(PROJECT_ID).is(projectId.value());
-            var queryObject = new Query(criteria).getQueryObject();
-            rebuildMatchingRoleAssignments(queryObject);
-        } finally {
-            lock.writeLock().unlock();
-        }
+
+        logger.info("Rebuilding permissions for project: {}", projectId);
+        var criteria = where(PROJECT_ID).is(projectId.value());
+        var queryObject = new Query(criteria).getQueryObject();
+        rebuildMatchingRoleAssignments(queryObject);
+
         eventDispatcher.dispatchEvent(new PermissionsChangedEvent(EventId.generate(), projectId));
     }
 
