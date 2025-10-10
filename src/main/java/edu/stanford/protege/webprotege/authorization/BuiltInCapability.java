@@ -138,6 +138,8 @@ public enum BuiltInCapability {
 
     DERMATOLOGY_HIERARCHY_ROOT,
 
+    TRADITIONAL_MEDICINE_HIERARCHY_ROOT,
+
     FULL_HIERARCHY_ROOT;
 
     private final BasicCapability capability;
