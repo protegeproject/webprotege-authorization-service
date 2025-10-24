@@ -17,12 +17,11 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import static edu.stanford.protege.webprotege.authorization.ProjectRoleDefinitionsRepository.PROJECT_ROLE_DEF_CACHE;
 import static edu.stanford.protege.webprotege.authorization.RoleAssignment.*;
 import static java.util.stream.Collectors.toList;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
@@ -93,7 +92,7 @@ public class AccessManagerImpl implements AccessManager {
         return resource.getProjectId().map(ProjectId::id).orElse(null);
     }
 
-    @CacheEvict(value = ROLE_ASSIGNMENTS_CACHE, allEntries = true)
+    @CacheEvict(value = {ROLE_ASSIGNMENTS_CACHE, PROJECT_ROLE_DEF_CACHE}, allEntries = true)
     @Override
     public void setAssignedRoles(@Nonnull Subject subject,
                                  @Nonnull Resource resource,
@@ -134,6 +133,7 @@ public class AccessManagerImpl implements AccessManager {
     }
 
     @Override
+    @CacheEvict(value = ROLE_ASSIGNMENTS_CACHE, allEntries = true)
     public void setProjectRoleAssignments(ProjectId projectId, ProjectRoleAssignments projectRoleAssignments) {
 
         // Remove existing assignments
