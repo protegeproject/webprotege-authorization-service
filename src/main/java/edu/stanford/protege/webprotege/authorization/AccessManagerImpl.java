@@ -5,7 +5,6 @@ import edu.stanford.protege.webprotege.common.EventId;
 import edu.stanford.protege.webprotege.common.ProjectId;
 import edu.stanford.protege.webprotege.ipc.EventDispatcher;
 import org.bson.Document;
-import org.keycloak.common.VerificationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -21,7 +20,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static edu.stanford.protege.webprotege.authorization.RoleAssignment.*;
+import static edu.stanford.protege.webprotege.authorization.RoleAssignment.PROJECT_ID;
+import static edu.stanford.protege.webprotege.authorization.RoleAssignment.USER_NAME;
 import static java.util.stream.Collectors.toList;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
@@ -50,7 +50,7 @@ public class AccessManagerImpl implements AccessManager {
 
     private final EventDispatcher eventDispatcher;
 
-    private final TokenValidator tokenValidator;
+    private final JwtRolesExtractor jwtRolesExtractor;
 
     private final BuiltInRoleOracle builtInRoleOracle;
 
@@ -64,14 +64,14 @@ public class AccessManagerImpl implements AccessManager {
                              ProjectRoleDefinitionsManager projectRoleDefinitionsManager,
                              RoleDefinitionsManager roleDefinitionsManager,
                              EventDispatcher eventDispatcher,
-                             TokenValidator tokenValidator,
+                             JwtRolesExtractor jwtRolesExtractor,
                              BuiltInRoleOracle builtInRoleOracle) {
         this.objectMapper = objectMapper;
         this.mongoTemplate = mongoTemplate;
         this.projectRoleDefinitionsManager = projectRoleDefinitionsManager;
         this.roleDefinitionsManager = roleDefinitionsManager;
         this.eventDispatcher = eventDispatcher;
-        this.tokenValidator = tokenValidator;
+        this.jwtRolesExtractor = jwtRolesExtractor;
         this.builtInRoleOracle = builtInRoleOracle;
     }
 
@@ -262,21 +262,11 @@ public class AccessManagerImpl implements AccessManager {
                     .flatMap(roleAssignment -> roleAssignment.getCapabilityClosure().stream())
                     .toList());
 
-            if (jwt != null && !jwt.isEmpty()) {
-                try {
-                    List<RoleId> roleIds = tokenValidator.extractJwtRolesWithoutValidation(jwt).stream()
+            List<RoleId> roleIds = jwtRolesExtractor.safeExtractRolesWithoutVerification(jwt).stream()
                             .map(RoleId::new)
                             .toList();
-                    capabilities.addAll(builtInRoleOracle.getCapabilitiesAssociatedToRoles(roleIds));
-                } catch (VerificationException e) {
-                    logger.error("Error getting token claims", e);
-                    throw new RuntimeException(e);
-                }
-            }
-
-
+            capabilities.addAll(builtInRoleOracle.getCapabilitiesAssociatedToRoles(roleIds));
             return capabilities.contains(capability);
-
         } finally {
             lock.readLock().unlock();
         }
