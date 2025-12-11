@@ -21,13 +21,6 @@ import java.util.Set;
 @Configuration
 public class TokenValidator {
 
-    private Map<String,PublicKey> publicKeys;
-
-
-    @Value("${keycloak-issuer-url}")
-    private String keycloakUrl;
-
-
     @Bean
     public RestTemplate restTemplate(){
         return new RestTemplate();
