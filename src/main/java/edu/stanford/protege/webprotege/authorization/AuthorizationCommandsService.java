@@ -13,16 +13,9 @@ public class AuthorizationCommandsService {
 
     private final AccessManager accessManager;
 
-    private final TokenValidator tokenValidator;
-
-    private final BuiltInRoleOracle builtInRoleOracle;
-
-    public AuthorizationCommandsService(AccessManager accessManager, TokenValidator tokenValidator, BuiltInRoleOracle builtInRoleOracle) {
+    public AuthorizationCommandsService(AccessManager accessManager) {
         this.accessManager = accessManager;
-        this.tokenValidator = tokenValidator;
-        this.builtInRoleOracle = builtInRoleOracle;
     }
-    // TODO:  Update this when Alex has committed the code
     public GetAuthorizationStatusResponse handleAuthorizationStatusCommand(GetAuthorizationStatusRequest request, ExecutionContext executionContext) {
         var hasPermission = accessManager.hasPermission(request.subject(),
                     request.resource(),
