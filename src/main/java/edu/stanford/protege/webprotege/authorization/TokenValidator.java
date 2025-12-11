@@ -33,20 +33,6 @@ public class TokenValidator {
         return new RestTemplate();
     }
 
-    @Bean
-    public Map<String,PublicKey> setUpPublicKey(RestTemplate restTemplate) throws IOException, CertificateException {
-        JSONWebKeySet responseEntity = restTemplate.getForObject(keycloakUrl, JSONWebKeySet.class);
-        if(responseEntity != null && responseEntity.getKeys() != null && responseEntity.getKeys().length > 0) {
-            // Parse the response to extract the public key
-            publicKeys = new HashMap<>();
-            for(JWK jwk : responseEntity.getKeys()) {
-                JWKParser parser = new JWKParser(jwk);
-                publicKeys.put(jwk.getKeyId(), parser.toPublicKey());
-            }
-        }
-        return publicKeys;
-    }
-
     /**
      * Extracts claims from a JWT token without verification.
      * Note: This method should only be used when token verification is not critical.
