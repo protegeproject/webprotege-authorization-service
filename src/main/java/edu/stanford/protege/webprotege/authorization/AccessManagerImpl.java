@@ -252,7 +252,7 @@ public class AccessManagerImpl implements AccessManager {
     }
 
     @Override
-    public boolean hasPermission(@Nonnull Subject subject, @Nonnull Resource resource, @Nonnull Capability capability, String jwt) {
+    public boolean hasPermission(@Nonnull Subject subject, @Nonnull Resource resource, @Nonnull Capability capability, @Nullable String jwt) {
         logger.info("Checking permission for subject {} and resource {} with capability: {}", subject, resource, capability);
 
         lock.readLock().lock();
