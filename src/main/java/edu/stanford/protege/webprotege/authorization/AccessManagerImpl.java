@@ -264,7 +264,7 @@ public class AccessManagerImpl implements AccessManager {
 
             if (jwt != null && !jwt.isEmpty()) {
                 try {
-                    List<RoleId> roleIds = tokenValidator.extractClaimsWithoutVerification(jwt).stream()
+                    List<RoleId> roleIds = tokenValidator.extractJwtRolesWithoutValidation(jwt).stream()
                             .map(RoleId::new)
                             .toList();
                     capabilities.addAll(builtInRoleOracle.getCapabilitiesAssociatedToRoles(roleIds));
