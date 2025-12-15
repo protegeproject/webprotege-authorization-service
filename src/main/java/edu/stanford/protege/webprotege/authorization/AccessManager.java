@@ -4,6 +4,7 @@ package edu.stanford.protege.webprotege.authorization;
 import edu.stanford.protege.webprotege.common.ProjectId;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -64,13 +65,14 @@ public interface AccessManager {
      * @param subject    The subject.
      * @param resource   The resource on which the capability should be executed.
      * @param capability The required capability.
+     * @param jwt The Jason Web Token (JWT) from which super admin roles can be determined. This may be blank or null.
      * @return {@code true} if the subject has permission to execute the specified capability on the specified resource,
      * otherwise {@code false}.
      */
     boolean hasPermission(@Nonnull Subject subject,
                           @Nonnull Resource resource,
                           @Nonnull Capability capability,
-                          String jwt);
+                          @Nullable String jwt);
 
     Collection<Subject> getSubjectsWithAccessToResource(Resource resource);
 

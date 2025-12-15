@@ -20,5 +20,3 @@ webprotege.rabbitmq:
   requestqueue: webprotege-authorization-queue
   responsequeue: webprotege-authorization-response-queue
   timeout: 60000
-
-keycloak-issuer-url: http://webprotege-local.edu/keycloak-admin/realms/webprotege/protocol/openid-connect/certs

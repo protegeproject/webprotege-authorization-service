@@ -3,7 +3,6 @@ package edu.stanford.protege.webprotege.authorization;
 import edu.stanford.protege.webprotege.ipc.CommandHandler;
 import edu.stanford.protege.webprotege.ipc.ExecutionContext;
 import edu.stanford.protege.webprotege.ipc.WebProtegeHandler;
-import org.keycloak.common.VerificationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
@@ -21,13 +20,14 @@ public class GetAuthorizedCapabilitiesHandler implements CommandHandler<GetAutho
     private final static Logger logger = LoggerFactory.getLogger(GetAuthorizedCapabilitiesHandler.class);
 
     private final AccessManager accessManager;
-    private final TokenValidator tokenValidator;
+
+    private final JwtRolesExtractor jwtRolesExtractor;
 
     private final BuiltInRoleOracle builtInRoleOracle;
 
-    public GetAuthorizedCapabilitiesHandler(AccessManager accessManager, TokenValidator tokenValidator, BuiltInRoleOracle builtInRoleOracle) {
+    public GetAuthorizedCapabilitiesHandler(AccessManager accessManager, JwtRolesExtractor jwtRolesExtractor, BuiltInRoleOracle builtInRoleOracle) {
         this.accessManager = accessManager;
-        this.tokenValidator = tokenValidator;
+        this.jwtRolesExtractor = jwtRolesExtractor;
         this.builtInRoleOracle = builtInRoleOracle;
     }
 
@@ -46,15 +46,12 @@ public class GetAuthorizedCapabilitiesHandler implements CommandHandler<GetAutho
     public Mono<GetAuthorizedCapabilitiesResponse> handleRequest(GetAuthorizedCapabilitiesRequest request, ExecutionContext executionContext) {
         var capabilities = new HashSet<Capability>();
 
-        try {
-            //extract any SUPER admin capabilities from token
-            var roleIds = tokenValidator.extractClaimsWithoutVerification(executionContext.jwt()).stream()
-                    .map(RoleId::new)
-                    .toList();
-            capabilities.addAll(new HashSet<>(builtInRoleOracle.getCapabilitiesAssociatedToRoles(roleIds)));
-        } catch (VerificationException e) {
-            throw new RuntimeException(e);
-        }
+        // We should be able to change this to check if the resource is the application.
+        // extract any SUPER admin capabilities from token
+        var roleIds = jwtRolesExtractor.safeExtractRolesWithoutVerification(executionContext.jwt()).stream()
+                .map(RoleId::new)
+                .toList();
+        capabilities.addAll(new HashSet<>(builtInRoleOracle.getCapabilitiesAssociatedToRoles(roleIds)));
 
         capabilities.addAll(accessManager.getCapabilityClosure(request.subject(),
                 request.resource()));
