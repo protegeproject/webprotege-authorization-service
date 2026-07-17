@@ -44,6 +44,67 @@ class JwtRolesExtractor_Tests {
     }
 
     @Test
+    void extractRolesWithoutVerification_noWebprotegeEntryInResourceAccess_returnsEmptySetInsteadOfThrowing() throws VerificationException {
+        // The normal case for an ordinary collaborator - only admins/project-creators
+        // are assigned any "webprotege" client roles, so most tokens' resourceAccess
+        // map simply has no entry for it at all.
+        var jwt = "some-jwt";
+
+        var token = mock(AccessToken.class);
+        when(token.getResourceAccess()).thenReturn(Map.of());
+
+        var verifier = mock(TokenVerifier.class);
+        when(verifier.getToken()).thenReturn(token);
+
+        try(var tokenVerifierStatic = mockStatic(TokenVerifier.class)) {
+            tokenVerifierStatic.when(() -> TokenVerifier.create(jwt, AccessToken.class))
+                    .thenReturn(verifier);
+
+            var extractor = new JwtRolesExtractor();
+
+            var roles = extractor.extractRolesWithoutVerification(jwt);
+
+            assertEquals(Collections.emptySet(), roles);
+        }
+    }
+
+    @Test
+    void extractRolesWithoutVerification_nullResourceAccess_returnsEmptySetInsteadOfThrowing() throws VerificationException {
+        var jwt = "some-jwt";
+
+        var token = mock(AccessToken.class);
+        when(token.getResourceAccess()).thenReturn(null);
+
+        var verifier = mock(TokenVerifier.class);
+        when(verifier.getToken()).thenReturn(token);
+
+        try(var tokenVerifierStatic = mockStatic(TokenVerifier.class)) {
+            tokenVerifierStatic.when(() -> TokenVerifier.create(jwt, AccessToken.class))
+                    .thenReturn(verifier);
+
+            var extractor = new JwtRolesExtractor();
+
+            var roles = extractor.extractRolesWithoutVerification(jwt);
+
+            assertEquals(Collections.emptySet(), roles);
+        }
+    }
+
+    @Test
+    void safeExtractRolesWithoutVerification_whenExtractionThrowsRuntimeException_returnsEmptySetInsteadOfPropagating() throws VerificationException {
+        var jwt = "some-jwt";
+
+        var extractor = spy(new JwtRolesExtractor());
+        doThrow(new NullPointerException("simulated unanticipated NPE"))
+                .when(extractor)
+                .extractRolesWithoutVerification(jwt);
+
+        var roles = extractor.safeExtractRolesWithoutVerification(jwt);
+
+        assertEquals(Collections.emptySet(), roles);
+    }
+
+    @Test
     void extractRolesWithoutVerification_shouldPropagateVerificationException() throws VerificationException {
         var jwt = "bad-jwt";
 
