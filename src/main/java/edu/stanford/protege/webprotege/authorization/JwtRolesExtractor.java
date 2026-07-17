@@ -27,7 +27,12 @@ public class JwtRolesExtractor {
     public Set<String> extractRolesWithoutVerification(String jwt) throws VerificationException {
         TokenVerifier<AccessToken> verifier = TokenVerifier.create(jwt, AccessToken.class);
         AccessToken token = verifier.getToken();
-        return token.getResourceAccess().get("webprotege").getRoles();
+        var resourceAccess = token.getResourceAccess();
+        var webprotegeAccess = resourceAccess == null ? null : resourceAccess.get("webprotege");
+        // A user with no "webprotege" client roles - the normal case for an ordinary
+        // collaborator, since only admins/project-creators are assigned any - has no
+        // entry here at all. That is not a malformed token, just an absence of roles.
+        return webprotegeAccess == null ? Collections.emptySet() : webprotegeAccess.getRoles();
     }
 
     /**
@@ -47,7 +52,10 @@ public class JwtRolesExtractor {
         }
         try {
             return extractRolesWithoutVerification(jwt);
-        } catch(VerificationException e) {
+        } catch(VerificationException | RuntimeException e) {
+            // RuntimeException is caught alongside VerificationException so this method
+            // keeps the "no exception will be thrown" contract its own javadoc promises,
+            // regardless of what shape a future token/library change turns out to need.
             logger.error("Error extracting roles from JWT. Returning empty set of roles." , e);
             return Collections.emptySet();
         }

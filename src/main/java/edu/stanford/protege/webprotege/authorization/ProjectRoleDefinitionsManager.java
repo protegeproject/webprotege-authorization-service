@@ -153,8 +153,21 @@ public class ProjectRoleDefinitionsManager {
         var cyclePath = new ArrayList<RoleId>();
         cyclePath.add(currentRoleId);
         var current = currentRoleId;
-        while (toProcess.contains(current)) {
-            current = roleDefinitionsMap.get(current).parentRoles().iterator().next();
+        // Best-effort reconstruction of the cycle for this log message only - it must
+        // never throw, since a crash here would turn a merely-logged, tolerated data
+        // anomaly into a hard failure of whatever capability check triggered it. A
+        // dangling parent reference (a role id with no entry in roleDefinitionsMap) or
+        // a role with no parents left to follow both just end the reconstruction early
+        // instead of crashing; the size-bounded guard is a backstop against any other
+        // unanticipated non-termination.
+        var guard = roleDefinitionsMap.size() + 1;
+        while (guard-- > 0 && toProcess.contains(current)) {
+            var role = roleDefinitionsMap.get(current);
+            var parent = role == null ? null : role.parentRoles().stream().findFirst().orElse(null);
+            if (parent == null) {
+                break;
+            }
+            current = parent;
             cyclePath.add(current);
         }
         logger.warn("Cycle detected in role hierarchy: {}", String.join(" -> ",
